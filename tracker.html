@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>K1 계양점 학생 관리시스템</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;background:#f0f2f5;display:flex;height:100vh;overflow:hidden}
+/* ── 사이드바 ── */
+#sidenav{width:196px;min-width:196px;background:#0f172a;display:flex;flex-direction:column;height:100vh}
+.nav-logo{padding:18px 16px 14px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px}
+.logo-box{width:34px;height:34px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0}
+.logo-title{color:#fff;font-size:13px;font-weight:800;line-height:1.4}
+.logo-sub{color:#64748b;font-size:10.5px}
+.nav-menu{list-style:none;padding:10px 0;flex:1}
+.nav-item{padding:11px 16px;color:#94a3b8;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;border-left:3px solid transparent;user-select:none}
+.nav-item:hover{background:#1e293b;color:#e2e8f0}
+.nav-item.active{background:#1e293b;color:#60a5fa;border-left-color:#3b82f6;font-weight:700}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+.nav-bottom{padding:12px 16px;border-top:1px solid #1e293b;color:#475569;font-size:11px}
+/* ── 앱 영역 ── */
+#app{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#page-header{background:#fff;padding:12px 24px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#page-header h2{font-size:15px;font-weight:800;color:#0f172a}
+#page-header .sub{font-size:11px;color:#94a3b8;margin-top:2px}
+#page-content{flex:1;overflow-y:auto;padding:20px 24px}
+#page-content::-webkit-scrollbar{width:6px}
+#page-content::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+.page{display:none}
+.page.active{display:block}
+/* ── 대시보드 ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-top:3px solid #e5e7eb}
+.stat-card .s-lbl{font-size:11.5px;color:#64748b;margin-bottom:6px}
+.stat-card .s-val{font-size:30px;font-weight:900;line-height:1}
+.stat-card .s-sub{font-size:11px;color:#94a3b8;margin-top:5px}
+.sec-title{font-size:13px;font-weight:700;color:#374151;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec-title span{font-size:11px;color:#9ca3af;font-weight:400}
+.board-wrap{display:flex;flex-direction:column;gap:12px;overflow-x:hidden}
+.board-col{min-width:205px;max-width:205px;background:#f1f5f9;border-radius:12px;padding:10px;flex-shrink:0;transition:background .15s}
+.board-col.bover{background:#dbeafe}
+.board-col-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid #e2e8f0}
+.board-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;flex-shrink:0}
+.board-col-name{font-weight:700;font-size:13px;flex:1;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.board-col-cnt{font-size:10px;color:#64748b;background:#e2e8f0;padding:1px 6px;border-radius:9px;font-weight:600;flex-shrink:0}
+.board-col-del{background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;line-height:1;padding:0 2px;flex-shrink:0}
+.board-col-del:hover{color:#ef4444}
+.board-col-body{min-height:30px}
+.bcard{background:#fff;border-radius:7px;padding:6px 9px;margin-bottom:5px;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;border-left:3px solid #e2e8f0;transition:box-shadow .12s;user-select:none}
+.bcard:hover{box-shadow:0 3px 10px rgba(0,0,0,.13)}
+.bcard.dragging{opacity:.35;cursor:grabbing}
+.bcard.b-leave{opacity:.5;cursor:default}
+.bcard-name{font-size:12px;font-weight:600;color:#1e293b}
+.bcard-name.clickable{cursor:pointer}
+.bcard-name.clickable:hover{color:#3b82f6}
+.bcard-badge{font-size:10px;padding:1px 5px;border-radius:6px;font-weight:700;flex-shrink:0;margin-left:4px}
+.board-add-stu{width:100%;padding:5px;border:1.5px dashed #cbd5e1;background:none;cursor:pointer;color:#94a3b8;font-size:11px;border-radius:7px;margin-top:4px;transition:all .12s;box-sizing:border-box}
+.board-add-stu:hover{background:#e2e8f0;color:#475569;border-color:#94a3b8}
+.badd-form{margin-top:4px}
+.badd-input{width:100%;padding:5px 8px;border:1.5px solid #3b82f6;border-radius:7px;font-size:12px;outline:none;box-sizing:border-box}
+.board-col-add-wrap{display:flex;align-items:flex-start;padding-top:2px;flex-shrink:0}
+.board-add-col-btn{width:44px;height:44px;background:#e2e8f0;border:none;border-radius:10px;cursor:pointer;color:#64748b;font-size:24px;font-weight:300;line-height:1;transition:all .12s}
+.board-add-col-btn:hover{background:#cbd5e1;color:#1e293b}
+.team-row{background:#fff;border-radius:14px;border:1.5px solid #e2e8f0;overflow:hidden}
+.team-hdr{display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;user-select:none}
+.team-hdr:hover{background:#f8fafc}
+.team-av{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900;flex-shrink:0}
+.team-name{font-size:15px;font-weight:900;flex:1;color:#1e293b}
+.team-cnt{font-size:11px;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:9px;flex-shrink:0}
+.team-toggle{font-size:11px;color:#94a3b8;transition:transform .2s;flex-shrink:0;font-weight:700}
+.team-toggle.closed{transform:rotate(-90deg)}
+.team-body{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;padding:4px 14px 14px;align-items:flex-start}
+.team-body.hidden,.board-col-body.hidden,.board-add-stu.hidden{display:none}
+.board-col-hdr{cursor:pointer;border-radius:8px;transition:background .1s}
+.board-col-hdr:hover{background:rgba(0,0,0,.04)}
+.board-col-name.bcc::after{content:" ▸";font-size:9px;color:#94a3b8;margin-left:2px}
+.bcm-popup{background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.15);padding:4px;min-width:120px;border:1px solid #e2e8f0}
+.bcm-item{padding:6px 12px;font-size:12px;cursor:pointer;border-radius:6px;white-space:nowrap;color:#1e293b}
+.bcm-item:hover{background:#f1f5f9}
+.bcm-item.bcm-green{color:#16a34a}
+.bcm-item.bcm-red{color:#dc2626}
+.bcm-item.bcm-gray{color:#64748b}
+.bcm-sep{height:1px;background:#f1f5f9;margin:3px 0}
+.bcard-menu-btn{background:none;border:none;cursor:pointer;color:#cbd5e1;padding:0 2px;font-size:15px;line-height:1;flex-shrink:0}
+.bcard-menu-btn:hover{color:#475569}
+.ts-stu{background:#f8fafc;border-radius:8px;padding:8px 10px;font-size:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .15s}
+.ts-stu:hover{background:#eff6ff}
+.ts-stu .ts-n{font-weight:600;color:#1e293b}
+.ts-stu .ts-sc{font-size:10.5px;padding:1px 5px;border-radius:6px}
+/* ── 학생별 성취도 ── */
+#students-layout{display:flex;gap:14px;height:calc(100vh - 112px)}
+#stu-list-panel{width:210px;flex-shrink:0;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+#stu-search{width:100%;padding:10px 12px;border:none;border-bottom:1px solid #f1f5f9;font-size:12px;outline:none;color:#0f172a}
+#stu-search::placeholder{color:#9ca3af}
+.sf-row{display:flex;gap:3px;padding:7px 8px;border-bottom:1px solid #f1f5f9}
+.sf-btn{flex:1;padding:4px 0;border:none;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer}
+.sf-btn.on{background:#3b82f6;color:#fff}
+.sf-btn:not(.on){background:#f1f5f9;color:#64748b}
+#stu-items{flex:1;overflow-y:auto}
+#stu-items::-webkit-scrollbar{width:3px}
+#stu-items::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+.sl-row{padding:8px 11px;font-size:12px;color:#374151;cursor:pointer;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f9fafb;gap:4px}
+.sl-row:hover{background:#f8fafc}
+.sl-row.active{background:#eff6ff;color:#1d4ed8;font-weight:700}
+.sl-left{display:flex;align-items:center;gap:4px;min-width:0;flex:1}
+.sl-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sl-tag{font-size:9.5px;padding:1px 4px;border-radius:5px;white-space:nowrap;flex-shrink:0}
+.sl-cnt{font-size:10px;color:#94a3b8;flex-shrink:0}
+#stu-detail-panel{flex:1;overflow-y:auto;min-width:0}
+#stu-detail-panel::-webkit-scrollbar{width:5px}
+#stu-detail-panel::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+#stu-welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#94a3b8;text-align:center}
+#stu-welcome h3{font-size:15px;color:#64748b;margin-bottom:6px;margin-top:14px}
+.stu-hdr{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stu-av{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:#fff;flex-shrink:0}
+.stu-info h2{font-size:18px;font-weight:800;color:#0f172a;margin-bottom:3px}
+.stu-info .meta{font-size:12px;color:#64748b}
+.stu-right{margin-left:auto;text-align:right}
+.score-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:10px;font-size:13px;font-weight:800;margin-bottom:6px}
+.m-tags{display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end}
+.m-tag{display:inline-block;border-radius:8px;padding:2px 7px;font-size:10px}
+.m-con{background:#dbeafe;color:#1d4ed8}.m-buz{background:#fce7f3;color:#be185d}
+.charts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.chart-card{background:#fff;border-radius:12px;padding:13px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.ct{font-size:10.5px;font-weight:700;color:#475569;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between}
+.cbadge{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:700}
+.up{background:#dcfce7;color:#16a34a}.dn{background:#fee2e2;color:#dc2626}.fl{background:#fef9c3;color:#ca8a04}
+.chart-wrap{height:115px;position:relative}
+.card-box{background:#fff;border-radius:12px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card-box h3{font-size:12px;font-weight:700;color:#475569;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#f8fafc;color:#64748b;font-weight:600;padding:7px 8px;text-align:center;border-bottom:2px solid #e2e8f0;white-space:nowrap}
+td{padding:6px 8px;text-align:center;border-bottom:1px solid #f1f5f9;color:#1e293b}
+td.mc{font-weight:700;color:#3b82f6;text-align:left;white-space:nowrap}
+td.nv{color:#d1d5db}
+td.cc{background:#eff6ff}td.bc{background:#fdf2f8}
+.pi{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.pi:last-child{border-bottom:none}
+.pi-ic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.pi-body h4{font-size:11.5px;font-weight:700;color:#1e293b;margin-bottom:3px}
+.pi-msg{font-size:11px;color:#374151;line-height:1.6;margin-bottom:3px}
+.pi-drill{font-size:10px;color:#6b7280;background:#f9fafb;border-left:3px solid #e5e7eb;padding:3px 8px;border-radius:0 4px 4px 0;margin-top:3px;line-height:1.5}
+.pg .pi-drill{border-left-color:#16a34a;background:#f0fdf4}
+.pw .pi-drill{border-left-color:#ca8a04;background:#fffbeb}
+.pd .pi-drill{border-left-color:#dc2626;background:#fff1f2}
+/* ── 정체학생 관리 ── */
+.stag-filters{display:flex;gap:8px;margin-bottom:14px;align-items:center}
+.sf2{padding:6px 14px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;color:#374151;transition:all .15s}
+.sf2.on{background:#0f172a;color:#fff;border-color:#0f172a}
+.stag-tbl-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);overflow:hidden}
+.stag-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.stag-tbl th{background:#f8fafc;color:#64748b;font-weight:700;padding:10px 12px;text-align:left;border-bottom:2px solid #e5e7eb;white-space:nowrap}
+.stag-tbl td{padding:9px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.stag-tbl tr:hover td{background:#f8fafc}
+.cause-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:8px;margin:1px;background:#fee2e2;color:#dc2626}
+.cause-tag.warn{background:#fef9c3;color:#ca8a04}
+.st-btn{padding:4px 10px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.st-pending{background:#f1f5f9;color:#64748b}
+.st-active{background:#fef9c3;color:#ca8a04}
+.st-done{background:#dcfce7;color:#16a34a}
+.go-btn{padding:3px 9px;border:none;border-radius:6px;font-size:11px;background:#eff6ff;color:#2563eb;cursor:pointer;font-weight:600}
+.re-edited{font-size:10px;color:#94a3b8;margin-top:3px;padding:2px 0;border-top:1px dashed #e2e8f0}
+.stag-group{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:10px;overflow:hidden}
+.stag-ghdr{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;border-bottom:1px solid #f1f5f9;user-select:none}
+.stag-ghdr:hover{background:#f8fafc}
+.stag-gcnt{font-size:12px;color:#64748b;margin-left:4px}
+.stag-toggle{margin-left:auto;font-size:11px;color:#94a3b8;transition:transform .2s}
+.stag-toggle.closed{transform:rotate(-90deg)}
+.stag-gbody{padding:0}
+.stag-gbody.hidden{display:none}
+.stag-empty{padding:12px 16px;font-size:12px;color:#94a3b8;font-style:italic}
+/* ── 상담/조치 기록 ── */
+#records-layout{display:flex;gap:14px;height:calc(100vh - 112px)}
+#rec-left{width:240px;flex-shrink:0;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden}
+#rec-left h3{padding:12px 14px;border-bottom:1px solid #f1f5f9;font-size:12.5px;font-weight:700;color:#374151}
+#rec-stu-search{width:100%;padding:9px 12px;border:none;border-bottom:1px solid #f1f5f9;font-size:12px;outline:none}
+#rec-stu-list{flex:1;overflow-y:auto}
+.rec-stu-row{padding:9px 12px;font-size:12px;color:#374151;cursor:pointer;border-bottom:1px solid #f9fafb;display:flex;align-items:center;justify-content:space-between}
+.rec-stu-row:hover{background:#f8fafc}
+.rec-stu-row.active{background:#eff6ff;color:#1d4ed8;font-weight:700}
+.rec-badge{font-size:10px;background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:8px}
+#rec-right{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rec-form-box{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.rec-form-box h3{font-size:12.5px;font-weight:700;color:#374151;margin-bottom:12px}
+.form-row{display:flex;gap:8px;margin-bottom:8px}
+.form-row label{font-size:11.5px;color:#64748b;display:flex;flex-direction:column;gap:3px;flex:1}
+.form-row input,.form-row select,.form-row textarea{padding:7px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;outline:none;font-family:inherit;width:100%}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:#3b82f6}
+textarea{resize:vertical;min-height:70px}
+.save-btn{padding:8px 20px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.save-btn:hover{background:#1e293b}
+.rec-history{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.08);flex:1;overflow-y:auto}
+.rec-history h3{font-size:12.5px;font-weight:700;color:#374151;margin-bottom:12px}
+.rec-entry{border-left:3px solid #e5e7eb;padding:8px 12px;margin-bottom:8px;background:#f8fafc;border-radius:0 8px 8px 0}
+.rec-entry.type-상담{border-left-color:#3b82f6}
+.rec-entry.type-피드백{border-left-color:#10b981}
+.rec-entry.type-프로그램{border-left-color:#f59e0b}
+.rec-entry.type-기타{border-left-color:#8b5cf6}
+.re-top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.re-type{font-size:10px;padding:1px 7px;border-radius:8px;font-weight:700}
+.re-date{font-size:10.5px;color:#94a3b8}
+.re-teacher{font-size:10.5px;color:#64748b}
+.re-note{font-size:12px;color:#374151;line-height:1.6}
+.rec-empty{text-align:center;color:#94a3b8;font-size:12px;padding:30px 0}
+
+.team-col-add{display:flex;align-items:flex-start;padding-top:2px;flex-shrink:0}
+.team-add-col-btn{width:38px;height:38px;background:rgba(255,255,255,.6);border:1.5px dashed #cbd5e1;border-radius:10px;cursor:pointer;color:#94a3b8;font-size:20px;font-weight:300;line-height:1;transition:all .12s;flex-shrink:0}
+.team-add-col-btn:hover{background:#fff;border-color:#94a3b8;color:#475569}
+.nm-overlay{position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center}
+.nm-box{background:#fff;border-radius:16px;padding:22px 24px;width:340px;max-width:92vw;box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.nm-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.nm-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:800;flex-shrink:0}
+.nm-ta{width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;resize:none;outline:none;box-sizing:border-box;font-family:inherit;transition:border-color .15s}
+.nm-ta:focus{border-color:#3b82f6}
+.nm-row{display:flex;gap:8px;margin-top:10px}
+.nm-sel{flex:1;padding:6px 8px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff}
+.nm-footer{font-size:10px;color:#94a3b8;text-align:center;margin-top:8px}
+.nm-history{max-height:220px;overflow-y:auto;margin-top:12px;border-top:1px solid #f1f5f9;padding-top:10px;display:none}
+.nm-history-label{font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px}
+.nm-hist-item{padding:7px 0;border-bottom:1px solid #f8fafc}
+.nm-hist-item:last-child{border-bottom:none}
+.nm-hist-meta{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.nm-hist-type{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px}
+.nm-hist-date{font-size:10px;color:#94a3b8}
+.nm-hist-note{font-size:12px;color:#334155;line-height:1.5}
+.re-actions{display:flex;gap:5px;margin-top:6px}
+.re-btn{padding:3px 10px;font-size:11px;border-radius:6px;cursor:pointer;border:1px solid #e2e8f0;background:#fff;font-weight:600;transition:all .1s}
+.re-btn.edit{color:#3b82f6;border-color:#bfdbfe}
+.re-btn.edit:hover{background:#eff6ff}
+.re-btn.del{color:#dc2626;border-color:#fecaca}
+.re-btn.del:hover{background:#fee2e2}
+.rec-entry.editing{border:1.5px solid #3b82f6;background:#f0f7ff}
+</style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<div id="fb-loading" style="position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px">
+  <div style="width:42px;height:42px;background:#3b82f6;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff">K1</div>
+  <div style="font-size:13px;color:#64748b;font-weight:500">데이터 불러오는 중...</div>
+</div>
+
+<nav id="sidenav">
+  <div class="nav-logo">
+    <div class="logo-box">K1</div>
+    <div><div class="logo-title">계양점 관리시스템</div><div class="logo-sub">K1 체육관</div></div>
+  </div>
+  <ul class="nav-menu">
+    <li class="nav-item active" onclick="goPage('dashboard')"><span class="nav-icon">🏠</span>대시보드</li>
+    <li class="nav-item" onclick="goPage('students')"><span class="nav-icon">📊</span>학생별 성취도</li>
+    <li class="nav-item" onclick="goPage('stagnation')"><span class="nav-icon">⚠️</span>정체학생 관리</li>
+    <li class="nav-item" onclick="goPage('records')"><span class="nav-icon">📝</span>상담/조치 기록</li>
+  </ul>
+  <div class="nav-bottom">2026 계양점 · 측정기록 트래커</div>
+</nav>
+<div id="app">
+  <div id="page-header">
+    <div><h2 id="hdr-title">대시보드</h2><div id="hdr-sub" class="sub">계양점 전체 현황</div></div>
+  </div>
+  <div id="page-content">
+    <div id="page-dashboard" class="page active">
+      <div class="stats-row" id="dash-stats"></div>
+      <div class="sec-title">부담임별 현황 <span>드래그로 학생 이동 · + 버튼으로 추가 · 열 추가로 섹션 생성</span><button onclick="resetBoard()" style="float:right;font-size:11px;padding:3px 9px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;color:#94a3b8;margin-top:1px">초기화</button></div>
+      <div id="board-container"></div>
+    </div>
+    <div id="page-students" class="page">
+      <div id="students-layout">
+        <div id="stu-list-panel">
+          <input id="stu-search" type="text" placeholder="🔍  학생 이름 검색...">
+          <div class="sf-row">
+            <button class="sf-btn on" onclick="setSF('all',this)">전체</button>
+            <button class="sf-btn" onclick="setSF('danger',this)">⚠정체</button>
+            <button class="sf-btn" onclick="setSF('good',this)">✅향상</button>
+          </div>
+          <div id="stu-items"></div>
+        </div>
+        <div id="stu-detail-panel">
+          <div id="stu-welcome"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><h3>학생을 선택하세요</h3><p style="font-size:12px;color:#94a3b8;margin-top:6px">왼쪽 목록에서 학생을 클릭하면<br>성취도와 기록 변화를 볼 수 있습니다</p></div>
+          <div id="stu-detail" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+    <div id="page-stagnation" class="page">
+      <div class="stag-filters">
+        <button class="sf2 on" onclick="setStagFilter('all',this)">전체</button>
+        <button class="sf2" onclick="setStagFilter('danger',this)">⚠ 정체</button>
+        <button class="sf2" onclick="setStagFilter('warn',this)">📊 소폭개선</button>
+        <button class="sf2" onclick="setStagFilter('good',this)">✅ 향상</button>
+        <span style="margin-left:auto;font-size:12px;color:#64748b" id="stag-count"></span>
+      </div>
+      <div id="stag-container"></div>
+    </div>
+    <div id="page-records" class="page">
+      <div id="records-layout">
+        <div id="rec-left">
+          <h3>학생 선택</h3>
+          <input id="rec-stu-search" type="text" placeholder="이름 검색...">
+          <div id="rec-stu-list"></div>
+        </div>
+        <div id="rec-right">
+          <div class="rec-form-box">
+            <h3>📝 상담 / 조치 기록 입력</h3>
+            <div id="rec-no-stu" style="color:#94a3b8;font-size:12px;padding:10px 0">← 왼쪽에서 학생을 선택하세요</div>
+            <div id="rec-form" style="display:none">
+              <div class="form-row">
+                <label>날짜<input type="date" id="rec-date"></label>
+                <label>부담임<select id="rec-teacher"><option value="">선택</option><option value="도현">이도현</option><option value="현수">정현수</option><option value="지은">정지은</option><option value="다빈">전다빈</option><option value="주혁">박주혁</option><option value="유선">이유선</option><option value="경준">이경준</option><option value="준기">홍준기</option><option value="소윤">이소윤</option><option value="병찬">강병찬</option></select></label>
+                <label>유형<select id="rec-type"><option>상담</option><option>실기 피드백</option><option>프로그램 조정</option><option>기타</option></select></label>
+              </div>
+              <div class="form-row"><label style="flex:1">내용<textarea id="rec-note" placeholder="상담 내용, 피드백, 조치 사항 등을 입력하세요..."></textarea></label></div>
+              <button class="save-btn" onclick="saveRecord()">저장</button>
+            </div>
+          </div>
+          <div class="rec-history">
+            <h3>📋 기록 히스토리</h3>
+            <div id="rec-history-list"><div class="rec-empty">학생을 선택하면 기록이 표시됩니다</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ── Firebase 연동 ──
+const firebaseConfig={apiKey:"AIzaSyBL5Q0RKsDIQIce6SXpir3UhVzLl9I-RPI",authDomain:"k1-tracker.firebaseapp.com",databaseURL:"https://k1-tracker-default-rtdb.firebaseio.com",projectId:"k1-tracker",storageBucket:"k1-tracker.firebasestorage.app",messagingSenderId:"613506650509",appId:"1:613506650509:web:4e828a3f9d5c4ca199adc4"};
+firebase.initializeApp(firebaseConfig);
+const fbDB=firebase.database();
+const FB_KEYS=['k1_board','k1_clps','k1_stu_status','k1_records','k1_mgmt'];
+let _fbReady=false;
+const _lsSet=Storage.prototype.setItem.bind(localStorage);
+const _lsGet=Storage.prototype.getItem.bind(localStorage);
+Storage.prototype.setItem=function(k,v){_lsSet(k,v);if(FB_KEYS.includes(k))fbDB.ref('data/'+k).set(v).catch(()=>{});};
+let _fbPending=FB_KEYS.length;
+FB_KEYS.forEach(k=>{
+  fbDB.ref('data/'+k).once('value').then(s=>{
+    const v=s.val();if(v!==null)_lsSet(k,v);
+    if(--_fbPending===0)_fbReady=true;
+  }).catch(()=>{if(--_fbPending===0)_fbReady=true;});
+});
+
+const MONTHS=['11월','12월','1월','2월','3월','4월','5월','6월'];
+const CON_MONTHS=['11월','1월','3월','5월'];
+const BUZ_MONTHS=['12월','2월','4월','6월'];
+const STUDENTS={
+'강윤호B':{school:'삼산고',g:'M',rec:{
+'12월':{jeom:256,s10:8.48,s20c:null,s20b:14.49,thr:7,back:125,flex:11.4,sit:31},
+'1월':{jeom:265,s10:9.08,s20c:15.32,s20b:null,thr:7.2,back:139.5,flex:11.1,sit:23},
+'2월':{jeom:272,s10:8.64,s20c:null,s20b:14.23,thr:7.9,back:152,flex:9.8,sit:null},
+'3월':{jeom:283,s10:8.47,s20c:15.31,s20b:null,thr:8,back:140,flex:11.6,sit:null},
+'4월':{jeom:283,s10:8.39,s20c:null,s20b:13.93,thr:8.5,back:135,flex:12.9,sit:35},
+'6월':{jeom:278,s10:8.17,s20c:null,s20b:14.34,thr:8,back:151.5,flex:8.6,sit:null}
+}},
+'강은하':{school:'중산고',g:'F',rec:{
+'5월':{jeom:206,s10:10.47,s20c:17.92,s20b:null,thr:7.7,back:103,flex:25.2,sit:null},
+'6월':{jeom:204,s10:null,s20c:null,s20b:null,thr:7.4,back:109,flex:24.7,sit:39}
+}},
+'고예림':{school:'세원고',g:'F',rec:{
+'3월':{jeom:212,s10:9.8,s20c:16.7,s20b:null,thr:6.4,back:90,flex:18.3,sit:null},
+'4월':{jeom:222,s10:9.78,s20c:null,s20b:16.27,thr:9.2,back:94.5,flex:18.7,sit:35},
+'5월':{jeom:228,s10:9.47,s20c:16.4,s20b:null,thr:7.5,back:90,flex:19.4,sit:37},
+'6월':{jeom:230,s10:9.31,s20c:null,s20b:15.59,thr:8.7,back:101,flex:18.9,sit:42}
+}},
+'곽은철':{school:'만수고',g:'M',rec:{
+'11월':{jeom:266,s10:8.94,s20c:15.27,s20b:null,thr:11,back:194.5,flex:11.9,sit:null},
+'1월':{jeom:274,s10:8.8,s20c:15.19,s20b:null,thr:10.5,back:172.5,flex:13,sit:null},
+'2월':{jeom:282,s10:8.45,s20c:null,s20b:14.27,thr:11.8,back:185.5,flex:13.7,sit:44},
+'3월':{jeom:285,s10:8.3,s20c:14.71,s20b:null,thr:13,back:205.5,flex:12.4,sit:null},
+'4월':{jeom:293,s10:8.34,s20c:null,s20b:14.1,thr:11,back:205,flex:null,sit:53},
+'5월':{jeom:292,s10:8.39,s20c:14.76,s20b:null,thr:12.1,back:191.5,flex:12.1,sit:53},
+'6월':{jeom:296,s10:8.21,s20c:null,s20b:14.09,thr:12.3,back:198,flex:10.1,sit:53}
+}},
+'구건모':{school:'중대부고',g:'M',rec:{
+'5월':{jeom:272,s10:8.72,s20c:14.44,s20b:null,thr:7.7,back:156.5,flex:15.6,sit:50},
+'6월':{jeom:280,s10:8.35,s20c:null,s20b:13.58,thr:7.8,back:164,flex:16,sit:52}
+}},
+'권순후':{school:'삼산고',g:'M',rec:{
+'12월':{jeom:268,s10:8.67,s20c:null,s20b:14.62,thr:8.9,back:105,flex:11.5,sit:42},
+'1월':{jeom:260,s10:8.91,s20c:15.34,s20b:null,thr:8.6,back:116,flex:13.4,sit:48},
+'2월':{jeom:270,s10:8.93,s20c:null,s20b:14.63,thr:9.8,back:146,flex:10.6,sit:47},
+'3월':{jeom:267,s10:8.59,s20c:15.09,s20b:null,thr:9.8,back:139.5,flex:7.4,sit:null},
+'4월':{jeom:266,s10:8.84,s20c:null,s20b:14.66,thr:9.9,back:130.5,flex:2.5,sit:48},
+'5월':{jeom:265,s10:null,s20c:15.44,s20b:null,thr:10.3,back:201,flex:null,sit:46},
+'6월':{jeom:277,s10:8.19,s20c:null,s20b:14.14,thr:null,back:169,flex:12.3,sit:null}
+}},
+'김규민B':{school:'하늘고',g:'F',rec:{
+'3월':{jeom:177,s10:9.83,s20c:17.37,s20b:null,thr:8.2,back:104.5,flex:null,sit:null},
+'4월':{jeom:191,s10:9.75,s20c:null,s20b:16.66,thr:7.7,back:117.5,flex:4.5,sit:41},
+'5월':{jeom:202,s10:9.59,s20c:17.29,s20b:null,thr:8.9,back:101.5,flex:6.3,sit:41},
+'6월':{jeom:207,s10:9.5,s20c:null,s20b:16.75,thr:9.1,back:111.5,flex:null,sit:null}
+}},
+'김규혁':{school:'인천효성고',g:'M',rec:{
+'2월':{jeom:310,s10:7.85,s20c:null,s20b:null,thr:11.7,back:221,flex:20.7,sit:null},
+'3월':{jeom:316,s10:8.06,s20c:14.88,s20b:null,thr:13,back:216,flex:19.5,sit:null},
+'4월':{jeom:318,s10:7.83,s20c:null,s20b:13.51,thr:12.6,back:208.5,flex:20.5,sit:null},
+'5월':{jeom:321,s10:7.65,s20c:null,s20b:null,thr:13.3,back:215.5,flex:20.2,sit:null},
+'6월':{jeom:null,s10:7.58,s20c:null,s20b:13.28,thr:13.7,back:240.5,flex:20.7,sit:null}
+}},
+'김규형':{school:'서운고',g:'M',rec:{
+'2월':{jeom:268,s10:8.77,s20c:null,s20b:14.36,thr:9.4,back:146,flex:15.9,sit:46},
+'3월':{jeom:280,s10:9.11,s20c:14.82,s20b:null,thr:10.6,back:156.5,flex:14.7,sit:null},
+'4월':{jeom:292,s10:8.25,s20c:null,s20b:13.92,thr:9.9,back:198.5,flex:14.3,sit:55},
+'5월':{jeom:301,s10:7.87,s20c:14.4,s20b:null,thr:10.9,back:221.5,flex:16.5,sit:61},
+'6월':{jeom:296,s10:7.91,s20c:null,s20b:13.7,thr:11.6,back:205,flex:18.6,sit:61}
+}},
+'김나린':{school:'검단고',g:'F',rec:{
+'2월':{jeom:214,s10:10.7,s20c:null,s20b:null,thr:7.5,back:117,flex:28.4,sit:null},
+'4월':{jeom:240,s10:10.09,s20c:null,s20b:16.83,thr:8.3,back:111.5,flex:29.4,sit:null},
+'5월':{jeom:231,s10:10.25,s20c:17.73,s20b:null,thr:7.1,back:124.5,flex:27.7,sit:null},
+'6월':{jeom:235,s10:null,s20c:null,s20b:17.44,thr:6.9,back:126.5,flex:28.5,sit:null}
+}},
+'김도훈':{school:'부흥고',g:'M',rec:{
+'2월':{jeom:251,s10:8.98,s20c:null,s20b:15.05,thr:7.5,back:165,flex:13.2,sit:40},
+'3월':{jeom:265,s10:8.99,s20c:15.82,s20b:null,thr:7.8,back:180.5,flex:14.4,sit:null},
+'4월':{jeom:262,s10:8.97,s20c:null,s20b:15.08,thr:9.4,back:205,flex:12.5,sit:52},
+'5월':{jeom:270,s10:8.47,s20c:15.7,s20b:null,thr:9.8,back:227,flex:16.1,sit:55},
+'6월':{jeom:262,s10:8.66,s20c:null,s20b:14.72,thr:9.2,back:209.5,flex:15.7,sit:56}
+}},
+'김동준':{school:'제일고',g:'M',rec:{
+'11월':{jeom:269,s10:8.51,s20c:15.48,s20b:null,thr:7.7,back:152.5,flex:20.8,sit:42},
+'12월':{jeom:266,s10:9.03,s20c:null,s20b:14.56,thr:7.7,back:156.5,flex:20.2,sit:null},
+'1월':{jeom:274,s10:8.45,s20c:15.24,s20b:null,thr:7.6,back:137.5,flex:21.8,sit:43},
+'2월':{jeom:283,s10:8.52,s20c:null,s20b:14.06,thr:8,back:148.5,flex:22.8,sit:45},
+'3월':{jeom:283,s10:8.44,s20c:14.89,s20b:null,thr:8.6,back:161.5,flex:22.4,sit:null},
+'4월':{jeom:281,s10:8.17,s20c:null,s20b:13.71,thr:9.3,back:177,flex:23.5,sit:52},
+'5월':{jeom:285,s10:null,s20c:14.68,s20b:null,thr:9.4,back:205.5,flex:26.4,sit:51},
+'6월':{jeom:290,s10:7.93,s20c:null,s20b:13.41,thr:10.2,back:177,flex:28.5,sit:null}
+}},
+'김민규':{school:'안양고',g:'M',rec:{
+'3월':{jeom:218,s10:9.15,s20c:15.69,s20b:null,thr:8.1,back:109,flex:19.1,sit:null},
+'4월':{jeom:234,s10:8.89,s20c:null,s20b:14.78,thr:8.9,back:129,flex:19.1,sit:36},
+'5월':{jeom:246,s10:8.71,s20c:15.4,s20b:null,thr:9.3,back:117.5,flex:21.7,sit:null},
+'6월':{jeom:246,s10:8.65,s20c:null,s20b:14.35,thr:9.7,back:122.5,flex:15.6,sit:null}
+}},
+'김민서D':{school:'인천외고',g:'M',rec:{
+'2월':{jeom:271,s10:8.79,s20c:null,s20b:14.34,thr:7.2,back:152,flex:12.8,sit:43},
+'3월':{jeom:265,s10:8.64,s20c:14.91,s20b:null,thr:7.5,back:175.5,flex:null,sit:null},
+'4월':{jeom:275,s10:8.56,s20c:null,s20b:14.19,thr:7.7,back:175,flex:14.7,sit:39},
+'5월':{jeom:279,s10:8.41,s20c:14.78,s20b:null,thr:9.2,back:173,flex:11.2,sit:41},
+'6월':{jeom:250,s10:8.52,s20c:null,s20b:13.76,thr:8.4,back:170.5,flex:12.6,sit:39}
+}},
+'김세헌':{school:'동인천고',g:'M',rec:{
+'11월':{jeom:262,s10:9.09,s20c:15.23,s20b:null,thr:8.1,back:150,flex:20.5,sit:42},
+'3월':{jeom:263,s10:8.89,s20c:15.34,s20b:null,thr:7.5,back:151.5,flex:20,sit:null},
+'4월':{jeom:275,s10:8.69,s20c:null,s20b:14.27,thr:8.4,back:147,flex:17.9,sit:51},
+'5월':{jeom:274,s10:8.44,s20c:15.25,s20b:null,thr:9.1,back:172.5,flex:18.5,sit:53},
+'6월':{jeom:270,s10:8.37,s20c:null,s20b:14.25,thr:9.2,back:137.5,flex:18.2,sit:51}
+}},
+'김소현':{school:'효성고',g:'F',rec:{
+'2월':{jeom:230,s10:9.3,s20c:null,s20b:16.19,thr:8.1,back:98.5,flex:20,sit:null},
+'3월':{jeom:243,s10:8.97,s20c:16.24,s20b:null,thr:9.2,back:134,flex:18.4,sit:null},
+'4월':{jeom:242,s10:9.23,s20c:null,s20b:15.72,thr:9.7,back:123.5,flex:17.2,sit:58},
+'5월':{jeom:250,s10:8.84,s20c:16.46,s20b:null,thr:9.2,back:131.5,flex:null,sit:61},
+'6월':{jeom:249,s10:8.85,s20c:null,s20b:15.29,thr:9.6,back:129.5,flex:19.5,sit:65}
+}},
+'김연빈':{school:'부개여고',g:'F',rec:{
+'11월':{jeom:180,s10:12.45,s20c:19.24,s20b:null,thr:7.2,back:117.5,flex:8.3,sit:null},
+'12월':{jeom:187,s10:10.54,s20c:null,s20b:18.78,thr:6.5,back:119,flex:10.5,sit:37},
+'1월':{jeom:184,s10:10.49,s20c:19.23,s20b:null,thr:7,back:108.5,flex:11,sit:41},
+'2월':{jeom:199,s10:10.31,s20c:null,s20b:18.06,thr:null,back:118,flex:13.1,sit:39},
+'3월':{jeom:198,s10:10.25,s20c:18.39,s20b:null,thr:7.3,back:125,flex:15.4,sit:null},
+'4월':{jeom:189,s10:10.01,s20c:null,s20b:17.61,thr:7.9,back:127.5,flex:15.1,sit:41},
+'5월':{jeom:194,s10:10.27,s20c:18.54,s20b:null,thr:8.1,back:121.5,flex:15.1,sit:44},
+}},
+'김용우':{school:'만수고',g:'M',rec:{
+'11월':{jeom:286,s10:8.58,s20c:15.27,s20b:null,thr:9.9,back:173,flex:15.1,sit:57},
+'12월':{jeom:288,s10:8.17,s20c:null,s20b:13.9,thr:10.6,back:180,flex:16.1,sit:66},
+'1월':{jeom:285,s10:8.45,s20c:15.19,s20b:null,thr:10.4,back:162,flex:null,sit:null},
+'2월':{jeom:303,s10:8.44,s20c:null,s20b:13.91,thr:11.9,back:156,flex:16.6,sit:58},
+'3월':{jeom:297,s10:8.01,s20c:14.59,s20b:null,thr:12.1,back:190,flex:16.5,sit:null},
+'4월':{jeom:303,s10:8.16,s20c:null,s20b:13.81,thr:11.4,back:172,flex:14.8,sit:60},
+'5월':{jeom:300,s10:8.26,s20c:14.66,s20b:null,thr:11.2,back:182,flex:15.7,sit:60},
+'6월':{jeom:310,s10:8.03,s20c:null,s20b:13.82,thr:12.6,back:229.5,flex:15.2,sit:null}
+}},
+'김은호':{school:'제일고',g:'M',rec:{
+'1월':{jeom:258,s10:9.05,s20c:16.13,s20b:null,thr:8.3,back:148.5,flex:20.9,sit:26},
+'2월':{jeom:268,s10:8.94,s20c:null,s20b:14.64,thr:8.4,back:194.5,flex:16.8,sit:41},
+'3월':{jeom:290,s10:8.72,s20c:15.11,s20b:null,thr:9.4,back:211.5,flex:16.4,sit:null},
+'4월':{jeom:290,s10:8.47,s20c:null,s20b:14.2,thr:8.5,back:219.5,flex:19,sit:47},
+'5월':{jeom:297,s10:8.22,s20c:14.99,s20b:null,thr:11.1,back:261,flex:18.3,sit:49},
+'6월':{jeom:302,s10:7.97,s20c:null,s20b:13.89,thr:11.5,back:235.5,flex:19.5,sit:55}
+}},
+'김의찬':{school:'인천남고',g:'M',rec:{
+'11월':{jeom:256,s10:9.06,s20c:15.5,s20b:null,thr:8,back:131.5,flex:7.8,sit:47},
+'12월':{jeom:269,s10:8.69,s20c:null,s20b:14.75,thr:8.8,back:152.5,flex:10.6,sit:57},
+'1월':{jeom:270,s10:8.66,s20c:15.32,s20b:null,thr:7.9,back:150,flex:10,sit:57},
+'2월':{jeom:271,s10:8.78,s20c:null,s20b:14.36,thr:10.2,back:161.5,flex:8.4,sit:60},
+'3월':{jeom:280,s10:8.65,s20c:15.65,s20b:null,thr:10.7,back:155.5,flex:9.2,sit:null},
+'4월':{jeom:277,s10:8.51,s20c:null,s20b:14.42,thr:10.1,back:154.5,flex:11.4,sit:51},
+'5월':{jeom:278,s10:8.16,s20c:15.44,s20b:null,thr:10.6,back:179.5,flex:8.9,sit:58},
+'6월':{jeom:289,s10:8.21,s20c:null,s20b:14.6,thr:10.5,back:175.5,flex:13,sit:59}
+}},
+'김준석':{school:'삼산고',g:'M',rec:{
+'1월':{jeom:241,s10:9.51,s20c:16.36,s20b:null,thr:10.1,back:157.5,flex:16,sit:48},
+'2월':{jeom:258,s10:9.2,s20c:null,s20b:15.33,thr:10.8,back:184,flex:14.5,sit:53},
+'3월':{jeom:264,s10:8.9,s20c:16.34,s20b:null,thr:12.9,back:198,flex:15.2,sit:null},
+'4월':{jeom:266,s10:8.9,s20c:null,s20b:14.69,thr:11.9,back:195.5,flex:15.3,sit:51},
+'5월':{jeom:276,s10:8.83,s20c:15.47,s20b:null,thr:12.3,back:222.5,flex:14.9,sit:56},
+'6월':{jeom:267,s10:8.6,s20c:null,s20b:14.64,thr:12.5,back:201.5,flex:15.7,sit:60}
+}},
+'김지호':{school:'인천만수고',g:'M',rec:{
+'3월':{jeom:258,s10:8.88,s20c:16.05,s20b:null,thr:9.1,back:158.5,flex:13.7,sit:null},
+'4월':{jeom:273,s10:8.63,s20c:null,s20b:14.58,thr:9.3,back:184,flex:15.1,sit:53},
+'5월':{jeom:286,s10:8.41,s20c:15.58,s20b:null,thr:10.5,back:179,flex:14.5,sit:63},
+'6월':{jeom:273,s10:8.4,s20c:null,s20b:14.26,thr:null,back:199.5,flex:14.9,sit:63}
+}},
+'김찬휘':{school:'대인고',g:'M',rec:{
+'11월':{jeom:282,s10:9.01,s20c:15.84,s20b:null,thr:9.8,back:204.5,flex:18.8,sit:42},
+'12월':{jeom:274,s10:null,s20c:null,s20b:null,thr:10.1,back:213,flex:19.9,sit:null},
+'1월':{jeom:273,s10:9.66,s20c:16.12,s20b:null,thr:9.6,back:195,flex:21.1,sit:null},
+'2월':{jeom:275,s10:8.62,s20c:null,s20b:null,thr:9.7,back:194,flex:20.2,sit:47},
+'3월':{jeom:286,s10:8.88,s20c:null,s20b:null,thr:9.4,back:210.5,flex:19.5,sit:null},
+'4월':{jeom:280,s10:8.39,s20c:null,s20b:15.55,thr:9.9,back:215,flex:21.7,sit:null},
+'5월':{jeom:290,s10:8.24,s20c:null,s20b:null,thr:10.3,back:234.5,flex:21.2,sit:null},
+'6월':{jeom:287,s10:8.13,s20c:null,s20b:14.66,thr:11.1,back:222.5,flex:21.2,sit:null}
+}},
+'김태린':{school:'부평여고',g:'F',rec:{
+'2월':{jeom:178,s10:10.88,s20c:null,s20b:17.81,thr:5.6,back:89,flex:26.6,sit:14},
+'3월':{jeom:198,s10:10.18,s20c:17.75,s20b:null,thr:6.8,back:98,flex:25.7,sit:null},
+'4월':{jeom:200,s10:10.22,s20c:null,s20b:17.21,thr:7.3,back:108,flex:28.9,sit:27},
+'5월':{jeom:205,s10:9.75,s20c:17.84,s20b:null,thr:7.7,back:111.5,flex:28.7,sit:33},
+'6월':{jeom:199,s10:9.81,s20c:null,s20b:null,thr:6.6,back:112.5,flex:29.4,sit:null}
+}},
+'김태연B':{school:'중산고',g:'F',rec:{
+'5월':{jeom:160,s10:11.66,s20c:19.57,s20b:null,thr:5.1,back:70.5,flex:15.3,sit:28},
+'6월':{jeom:175,s10:11.1,s20c:null,s20b:18.08,thr:5.6,back:80,flex:15.8,sit:35}
+}},
+'김하윤':{school:'제일고',g:'M',rec:{
+'11월':{jeom:269,s10:8.51,s20c:15.17,s20b:null,thr:6.8,back:132.5,flex:21.7,sit:50},
+'12월':{jeom:278,s10:8.32,s20c:null,s20b:14.26,thr:7.8,back:148,flex:22.7,sit:52},
+'1월':{jeom:278,s10:8.24,s20c:15.23,s20b:null,thr:7.5,back:145,flex:22.8,sit:51},
+'2월':{jeom:277,s10:8.44,s20c:null,s20b:13.87,thr:9.4,back:175,flex:24.4,sit:52},
+'3월':{jeom:274,s10:8.19,s20c:15.32,s20b:null,thr:9.9,back:203.5,flex:23,sit:null},
+'5월':{jeom:291,s10:null,s20c:null,s20b:null,thr:9.3,back:244.5,flex:23.7,sit:null},
+'6월':{jeom:286,s10:8.16,s20c:null,s20b:14.01,thr:10.8,back:229.5,flex:23.7,sit:null}
+}},
+'김한슬':{school:'아라고',g:'F',rec:{
+'3월':{jeom:174,s10:10.78,s20c:18.55,s20b:null,thr:5.7,back:91,flex:9.9,sit:null},
+'4월':{jeom:190,s10:10.53,s20c:null,s20b:17.37,thr:6.7,back:99.5,flex:12.4,sit:31},
+'5월':{jeom:202,s10:10.26,s20c:18.01,s20b:null,thr:7.2,back:105.5,flex:7.7,sit:null},
+'6월':{jeom:194,s10:10.19,s20c:null,s20b:17.15,thr:6.8,back:94,flex:8,sit:33}
+}},
+'나규리':{school:'부평여자고',g:'F',rec:{
+'2월':{jeom:211,s10:9.95,s20c:null,s20b:17,thr:8.7,back:95,flex:15.1,sit:33},
+'3월':{jeom:222,s10:9.85,s20c:17.27,s20b:null,thr:8.7,back:108.5,flex:15.7,sit:null},
+'4월':{jeom:227,s10:9.54,s20c:null,s20b:16.19,thr:9.8,back:108,flex:18.3,sit:40},
+'5월':{jeom:234,s10:9.41,s20c:17.28,s20b:null,thr:9.6,back:120.5,flex:17.4,sit:44},
+'6월':{jeom:228,s10:9.57,s20c:null,s20b:16.16,thr:10.9,back:12.5,flex:15.3,sit:null}
+}},
+'나은수':{school:'아라고',g:'M',rec:{
+'2월':{jeom:256,s10:9.4,s20c:null,s20b:15.86,thr:7.3,back:135,flex:10,sit:49},
+'3월':{jeom:272,s10:8.76,s20c:15.78,s20b:null,thr:8.5,back:130,flex:7.7,sit:null},
+'4월':{jeom:277,s10:9.02,s20c:null,s20b:14.68,thr:8.8,back:169,flex:8.7,sit:53},
+'5월':{jeom:282,s10:8.33,s20c:15.26,s20b:null,thr:9.9,back:170,flex:6.9,sit:54},
+'6월':{jeom:279,s10:8.45,s20c:null,s20b:14.5,thr:8.6,back:150.5,flex:7.8,sit:51}
+}},
+'남지웅':{school:'제일고',g:'M',rec:{
+'11월':{jeom:233,s10:9.44,s20c:16.06,s20b:null,thr:6.8,back:136,flex:20.7,sit:38},
+'12월':{jeom:250,s10:9.41,s20c:null,s20b:15.59,thr:6.6,back:107,flex:19.2,sit:47},
+'1월':{jeom:246,s10:9.22,s20c:15.88,s20b:null,thr:7,back:126.5,flex:20,sit:47},
+'2월':{jeom:246,s10:9.25,s20c:null,s20b:15.09,thr:7.2,back:118.5,flex:19.7,sit:48},
+'3월':{jeom:255,s10:8.97,s20c:15.71,s20b:null,thr:8.5,back:139.5,flex:20.2,sit:null},
+'4월':{jeom:252,s10:null,s20c:null,s20b:null,thr:7.7,back:141.5,flex:18.4,sit:42},
+'5월':{jeom:258,s10:null,s20c:null,s20b:null,thr:8.5,back:172.5,flex:20.2,sit:59},
+'6월':{jeom:252,s10:null,s20c:null,s20b:null,thr:8.5,back:162,flex:18,sit:55}
+}},
+'노윤서':{school:'서운고',g:'F',rec:{
+'3월':{jeom:214,s10:9.79,s20c:17.52,s20b:null,thr:8.2,back:104.5,flex:10.8,sit:null},
+'4월':{jeom:213,s10:10.23,s20c:null,s20b:16.79,thr:8.1,back:108.5,flex:11.6,sit:44},
+'5월':{jeom:214,s10:9.62,s20c:null,s20b:null,thr:9,back:97.5,flex:11.3,sit:46},
+'6월':{jeom:229,s10:9.63,s20c:null,s20b:16.56,thr:9,back:107.5,flex:14.1,sit:46}
+}},
+'문성현B':{school:'예일고',g:'M',rec:{
+'2월':{jeom:286,s10:9.1,s20c:null,s20b:15.61,thr:8.1,back:150.5,flex:8.1,sit:50},
+'3월':{jeom:284,s10:8.61,s20c:16.32,s20b:null,thr:10.3,back:null,flex:13.9,sit:null},
+'4월':{jeom:302,s10:8.59,s20c:null,s20b:15.17,thr:9.8,back:191.5,flex:13.9,sit:58},
+'5월':{jeom:296,s10:8.67,s20c:16.64,s20b:null,thr:10.1,back:208,flex:null,sit:59},
+'6월':{jeom:298,s10:8.66,s20c:null,s20b:null,thr:10.3,back:172,flex:14.8,sit:55}
+}},
+'박규정':{school:'영선고',g:'M',rec:{
+'11월':{jeom:239,s10:9.53,s20c:15.44,s20b:null,thr:8.9,back:158.5,flex:0,sit:40},
+'12월':{jeom:258,s10:9.06,s20c:null,s20b:14.58,thr:9,back:163,flex:1.4,sit:41},
+'1월':{jeom:263,s10:8.59,s20c:15.3,s20b:null,thr:9.1,back:171,flex:0.3,sit:40},
+'2월':{jeom:259,s10:8.82,s20c:null,s20b:14.53,thr:10.4,back:148.5,flex:2.6,sit:41},
+'3월':{jeom:266,s10:8.89,s20c:14.91,s20b:null,thr:10.5,back:155,flex:3.8,sit:null},
+'4월':{jeom:272,s10:8.55,s20c:null,s20b:14.46,thr:9,back:162,flex:1.8,sit:null},
+'5월':{jeom:266,s10:9.19,s20c:15.64,s20b:null,thr:9.7,back:166.5,flex:2.2,sit:41},
+'6월':{jeom:270,s10:9.04,s20c:null,s20b:15.03,thr:10.1,back:155,flex:null,sit:null}
+}},
+'박서진B':{school:'인천비즈니스고',g:'F',rec:{
+'3월':{jeom:194,s10:10.43,s20c:18.48,s20b:null,thr:6.8,back:81,flex:16.5,sit:null},
+'4월':{jeom:210,s10:10.01,s20c:null,s20b:17.28,thr:6.4,back:116.5,flex:17,sit:null},
+'5월':{jeom:208,s10:9.83,s20c:18.06,s20b:null,thr:7.2,back:118.5,flex:16.4,sit:37},
+'6월':{jeom:213,s10:9.78,s20c:null,s20b:16.95,thr:7.5,back:111.5,flex:15.9,sit:null}
+}},
+'박시원':{school:'중산고',g:'F',rec:{
+'3월':{jeom:172,s10:10.92,s20c:18.88,s20b:null,thr:5.4,back:104.5,flex:20,sit:null},
+'4월':{jeom:178,s10:10.62,s20c:null,s20b:18.12,thr:6,back:111.5,flex:15.9,sit:null},
+'5월':{jeom:197,s10:10.28,s20c:18,s20b:null,thr:7,back:129,flex:16.4,sit:null},
+'6월':{jeom:194,s10:10.05,s20c:null,s20b:17.96,thr:7.8,back:122,flex:17.3,sit:40}
+}},
+'박재우':{school:'제일고',g:'M',rec:{
+'4월':{jeom:250,s10:9.15,s20c:null,s20b:14.59,thr:9,back:196,flex:17.4,sit:40},
+'5월':{jeom:258,s10:8.76,s20c:15.55,s20b:null,thr:10.1,back:203.5,flex:17.5,sit:38},
+'6월':{jeom:266,s10:8.96,s20c:null,s20b:14.32,thr:10.3,back:195.5,flex:null,sit:41}
+}},
+'박한울':{school:'아라고',g:'F',rec:{
+'3월':{jeom:200,s10:10.13,s20c:18.42,s20b:null,thr:6.6,back:120,flex:11.7,sit:null},
+'4월':{jeom:197,s10:10.44,s20c:null,s20b:17.22,thr:7,back:98,flex:13.3,sit:47},
+'5월':{jeom:187,s10:10.42,s20c:18.71,s20b:null,thr:7.5,back:113,flex:null,sit:47},
+'6월':{jeom:206,s10:9.98,s20c:null,s20b:17.36,thr:7.4,back:106.5,flex:9.7,sit:47}
+}},
+'방우솔':{school:'인천비지니스고',g:'F',rec:{
+'5월':{jeom:194,s10:9.88,s20c:17.22,s20b:null,thr:null,back:143.5,flex:21.3,sit:34},
+'6월':{jeom:197,s10:9.95,s20c:null,s20b:16.88,thr:9.9,back:123,flex:19.5,sit:null}
+}},
+'서상윤':{school:'계산고',g:'M',rec:{
+'4월':{jeom:270,s10:8.6,s20c:null,s20b:14.58,thr:9.2,back:165.5,flex:18.4,sit:36},
+'5월':{jeom:286,s10:8.55,s20c:15.05,s20b:null,thr:null,back:165,flex:21.4,sit:null},
+'6월':{jeom:290,s10:8.18,s20c:null,s20b:13.89,thr:10.1,back:202,flex:21.3,sit:null}
+}},
+'서형욱':{school:'안남고',g:'M',rec:{
+'4월':{jeom:286,s10:8.07,s20c:null,s20b:null,thr:9.1,back:156.5,flex:null,sit:null},
+'6월':{jeom:298,s10:null,s20c:null,s20b:null,thr:10.5,back:null,flex:null,sit:null}
+}},
+'성연수':{school:'만수고',g:'M',rec:{
+'12월':{jeom:257,s10:8.88,s20c:null,s20b:15.16,thr:7.1,back:147,flex:23.2,sit:33},
+'1월':{jeom:255,s10:9.15,s20c:15.78,s20b:null,thr:7.3,back:160,flex:26.5,sit:null},
+'2월':{jeom:258,s10:8.93,s20c:null,s20b:15.09,thr:8.6,back:174,flex:24.9,sit:42},
+'3월':{jeom:279,s10:8.6,s20c:15.57,s20b:null,thr:7.3,back:155.5,flex:25.6,sit:null},
+'4월':{jeom:280,s10:8.74,s20c:null,s20b:14.79,thr:9.4,back:166.5,flex:24.1,sit:40},
+'5월':{jeom:287,s10:8.5,s20c:15.72,s20b:null,thr:10.5,back:209,flex:23.5,sit:38},
+'6월':{jeom:296,s10:8.65,s20c:null,s20b:14.46,thr:10.3,back:200.5,flex:25.5,sit:null}
+}},
+'성지호':{school:'삼산고',g:'M',rec:{
+'11월':{jeom:228,s10:10.06,s20c:17.04,s20b:null,thr:9.2,back:135.5,flex:16.6,sit:46},
+'12월':{jeom:238,s10:9.29,s20c:null,s20b:15.48,thr:8.8,back:130,flex:16.4,sit:54},
+'1월':{jeom:242,s10:9.00,s20c:16.07,s20b:null,thr:9.9,back:131.5,flex:16.6,sit:59},
+'2월':{jeom:239,s10:9.12,s20c:null,s20b:15.56,thr:9.7,back:145.5,flex:15.5,sit:55},
+'3월':{jeom:240,s10:8.79,s20c:16.32,s20b:null,thr:9.3,back:121,flex:15.7,sit:null},
+'4월':{jeom:256,s10:8.77,s20c:null,s20b:14.97,thr:9.8,back:138.5,flex:15.6,sit:57},
+'6월':{jeom:258,s10:8.79,s20c:null,s20b:15.22,thr:8.8,back:129.5,flex:16.5,sit:59}
+}},
+'송승현':{school:'부평여고',g:'F',rec:{
+'3월':{jeom:183,s10:10.93,s20c:19.02,s20b:null,thr:5.5,back:91.5,flex:3.8,sit:null},
+'5월':{jeom:188,s10:10.72,s20c:18.78,s20b:null,thr:6,back:109,flex:1.7,sit:12},
+'6월':{jeom:195,s10:10.71,s20c:null,s20b:17.78,thr:6.6,back:105,flex:5.6,sit:null}
+}},
+'송주원':{school:'작전여고',g:'F',rec:{
+'1월':{jeom:182,s10:11.98,s20c:19.48,s20b:null,thr:4.4,back:89,flex:30,sit:32},
+'2월':{jeom:210,s10:10.02,s20c:null,s20b:16.89,thr:6.4,back:90.5,flex:29.3,sit:39},
+'3월':{jeom:210,s10:9.83,s20c:17.64,s20b:null,thr:6.6,back:102,flex:30.1,sit:null},
+'5월':{jeom:206,s10:9.62,s20c:18.05,s20b:null,thr:5.8,back:86.5,flex:31,sit:33},
+'6월':{jeom:216,s10:9.6,s20c:null,s20b:16.65,thr:6.8,back:88,flex:30.5,sit:40}
+}},
+'송준우':{school:'삼산고',g:'M',rec:{
+'12월':{jeom:265,s10:8.59,s20c:null,s20b:14.54,thr:6.4,back:155.5,flex:23.8,sit:47},
+'1월':{jeom:266,s10:8.31,s20c:14.98,s20b:null,thr:6.5,back:161,flex:22.9,sit:49},
+'2월':{jeom:272,s10:8.73,s20c:null,s20b:14.16,thr:4.8,back:155.5,flex:23.9,sit:51},
+'3월':{jeom:290,s10:8.34,s20c:14.72,s20b:null,thr:7,back:122,flex:20.9,sit:null},
+'4월':{jeom:282,s10:8.63,s20c:null,s20b:14.46,thr:7.2,back:161.5,flex:21.5,sit:51},
+'5월':{jeom:290,s10:8.21,s20c:14.52,s20b:null,thr:7.6,back:204.5,flex:24.3,sit:61},
+'6월':{jeom:282,s10:8.26,s20c:null,s20b:13.94,thr:null,back:183,flex:24.4,sit:null}
+}},
+'송채린':{school:'세원고',g:'F',rec:{
+'11월':{jeom:191,s10:10.47,s20c:18.67,s20b:null,thr:8.1,back:110,flex:20.6,sit:33},
+'12월':{jeom:199,s10:10.35,s20c:null,s20b:18.31,thr:7.8,back:107.5,flex:23.5,sit:38},
+'1월':{jeom:187,s10:10.19,s20c:18.70,s20b:null,thr:7.6,back:101.5,flex:23.7,sit:35},
+'2월':{jeom:192,s10:10.15,s20c:null,s20b:17.89,thr:9.2,back:111.5,flex:25.1,sit:44},
+'3월':{jeom:200,s10:9.91,s20c:17.78,s20b:null,thr:8.1,back:126.5,flex:23.2,sit:null},
+'4월':{jeom:197,s10:10.28,s20c:null,s20b:17.37,thr:8,back:110,flex:24.9,sit:null},
+'5월':{jeom:207,s10:9.79,s20c:17.87,s20b:null,thr:7.8,back:138.5,flex:25,sit:null},
+'6월':{jeom:208,s10:10.05,s20c:null,s20b:17.89,thr:8.6,back:130,flex:26.8,sit:null}
+}},
+'심하람':{school:'삼산고',g:'F',rec:{
+'11월':{jeom:193,s10:10.78,s20c:18.96,s20b:null,thr:6.8,back:90.5,flex:30.8,sit:37},
+'12월':{jeom:199,s10:10.13,s20c:null,s20b:17.81,thr:7,back:92.5,flex:32.2,sit:42},
+'1월':{jeom:190,s10:10.45,s20c:18.56,s20b:null,thr:7.6,back:81,flex:33.2,sit:43},
+'2월':{jeom:199,s10:10.2,s20c:null,s20b:17.88,thr:7,back:92,flex:30.8,sit:40},
+'3월':{jeom:194,s10:9.96,s20c:18.34,s20b:null,thr:7.1,back:97,flex:30.1,sit:null},
+'4월':{jeom:204,s10:9.97,s20c:null,s20b:17.75,thr:7.2,back:88,flex:31.7,sit:45},
+'5월':{jeom:216,s10:9.89,s20c:18.24,s20b:null,thr:6.9,back:104,flex:32.3,sit:45},
+'6월':{jeom:214,s10:9.96,s20c:null,s20b:17.21,thr:7.5,back:91.5,flex:33.5,sit:46}
+}},
+'안채민':{school:'원당고',g:'F',rec:{
+'2월':{jeom:225,s10:9.62,s20c:null,s20b:16.49,thr:7.9,back:120.5,flex:19.1,sit:51},
+'3월':{jeom:235,s10:9.53,s20c:17.29,s20b:null,thr:9,back:109,flex:17.2,sit:null},
+'4월':{jeom:230,s10:9.42,s20c:null,s20b:16.1,thr:8.8,back:152,flex:17.1,sit:56},
+'5월':{jeom:244,s10:9.32,s20c:17,s20b:null,thr:9.3,back:165.5,flex:18,sit:58},
+'6월':{jeom:236,s10:9.35,s20c:null,s20b:15.87,thr:8.5,back:150,flex:18.8,sit:58}
+}},
+'원채이':{school:'안남고',g:'F',rec:{
+'3월':{jeom:206,s10:10.03,s20c:18.32,s20b:null,thr:6.5,back:97.5,flex:32.8,sit:null},
+'4월':{jeom:216,s10:9.75,s20c:null,s20b:17.08,thr:6.5,back:118,flex:34.1,sit:null},
+'5월':{jeom:222,s10:9.71,s20c:17.99,s20b:null,thr:7.3,back:121,flex:31.8,sit:null},
+'6월':{jeom:206,s10:9.75,s20c:null,s20b:16.93,thr:7.4,back:131,flex:34.3,sit:null}
+}},
+'유승현B':{school:'이음고',g:'M',rec:{
+'12월':{jeom:249,s10:8.62,s20c:null,s20b:14.65,thr:9.1,back:156.5,flex:20.2,sit:46},
+'1월':{jeom:246,s10:8.97,s20c:16.02,s20b:null,thr:9.2,back:153.5,flex:19.4,sit:48},
+'2월':{jeom:246,s10:9.31,s20c:null,s20b:14.85,thr:8.6,back:155,flex:19.9,sit:52},
+'3월':{jeom:249,s10:8.68,s20c:15.84,s20b:null,thr:8.6,back:149,flex:19.2,sit:null},
+'5월':{jeom:258,s10:8.67,s20c:15.81,s20b:null,thr:9,back:164.5,flex:20.2,sit:52},
+'6월':{jeom:258,s10:null,s20c:null,s20b:14.91,thr:11.7,back:148,flex:20.3,sit:52}
+}},
+'유은결':{school:'하늘고',g:'F',rec:{
+'4월':{jeom:217,s10:9.84,s20c:null,s20b:17.2,thr:9.5,back:120,flex:28.3,sit:43},
+'5월':{jeom:228,s10:9.59,s20c:17.85,s20b:null,thr:9.5,back:152,flex:27.2,sit:null},
+'6월':{jeom:228,s10:9.61,s20c:null,s20b:16.8,thr:null,back:144.5,flex:27.9,sit:null}
+}},
+'유준영B':{school:'만수고',g:'M',rec:{
+'11월':{jeom:255,s10:9.66,s20c:null,s20b:null,thr:8.7,back:136.5,flex:21.2,sit:51},
+'12월':{jeom:262,s10:9.31,s20c:null,s20b:15.62,thr:9.1,back:140,flex:21.6,sit:48},
+'2월':{jeom:248,s10:9.54,s20c:null,s20b:15.66,thr:9.5,back:140,flex:19.4,sit:49},
+'3월':{jeom:259,s10:9.16,s20c:16.85,s20b:null,thr:9.3,back:139.5,flex:20,sit:null},
+'4월':{jeom:258,s10:null,s20c:null,s20b:null,thr:9.6,back:153,flex:20.4,sit:52},
+'5월':{jeom:260,s10:8.7,s20c:16.22,s20b:null,thr:9,back:157.5,flex:21.8,sit:53},
+'6월':{jeom:278,s10:8.63,s20c:null,s20b:14.7,thr:null,back:151,flex:21.7,sit:null}
+}},
+'윤수한':{school:'아라고',g:'M',rec:{
+'11월':{jeom:257,s10:9.26,s20c:15.66,s20b:null,thr:7.3,back:128,flex:1.6,sit:32},
+'2월':{jeom:null,s10:8.77,s20c:null,s20b:14.83,thr:8.3,back:null,flex:5,sit:46},
+'3월':{jeom:280,s10:8.84,s20c:15.27,s20b:null,thr:9.8,back:145,flex:8.1,sit:null},
+'4월':{jeom:285,s10:8.62,s20c:null,s20b:14.71,thr:8,back:149,flex:4,sit:47},
+'5월':{jeom:304,s10:8.64,s20c:15.02,s20b:null,thr:9.2,back:172,flex:8.6,sit:38},
+'6월':{jeom:295,s10:8.74,s20c:null,s20b:14.7,thr:null,back:160,flex:6.7,sit:45}
+}},
+'윤찬희':{school:'계산공고',g:'M',rec:{
+'3월':{jeom:250,s10:8.76,s20c:15.78,s20b:null,thr:6.7,back:121,flex:16.1,sit:null},
+'5월':{jeom:null,s10:8.72,s20c:15.01,s20b:null,thr:8.4,back:121,flex:18,sit:54},
+'6월':{jeom:264,s10:8.44,s20c:null,s20b:14.68,thr:null,back:134,flex:18.7,sit:49}
+}},
+'윤채은':{school:'계산여고',g:'F',rec:{
+'12월':{jeom:164,s10:11.82,s20c:null,s20b:20.08,thr:4.9,back:95,flex:10.7,sit:21},
+'1월':{jeom:175,s10:12.05,s20c:20.48,s20b:null,thr:5,back:98.5,flex:15.1,sit:33},
+'2월':{jeom:181,s10:10.78,s20c:null,s20b:18.58,thr:6.6,back:94,flex:14.8,sit:34},
+'3월':{jeom:181,s10:10.56,s20c:18.8,s20b:null,thr:6.3,back:103,flex:14.2,sit:null},
+'4월':{jeom:202,s10:10.48,s20c:null,s20b:17.92,thr:7.3,back:98,flex:17,sit:44},
+'5월':{jeom:199,s10:10.43,s20c:18.80,s20b:null,thr:7.5,back:93,flex:16.4,sit:42},
+'6월':{jeom:206,s10:10.19,s20c:null,s20b:17.83,thr:7.4,back:109,flex:18.6,sit:43}
+}},
+'윤해정':{school:'부개여고',g:'F',rec:{
+'11월':{jeom:214,s10:10.05,s20c:17.76,s20b:null,thr:7,back:83,flex:35.1,sit:38},
+'12월':{jeom:209,s10:10.26,s20c:null,s20b:17.67,thr:7.4,back:88,flex:34.8,sit:36},
+'2월':{jeom:198,s10:10.36,s20c:null,s20b:17.41,thr:7.9,back:89,flex:34.1,sit:38},
+'3월':{jeom:223,s10:9.58,s20c:17.39,s20b:null,thr:7.7,back:85.5,flex:35,sit:null},
+'4월':{jeom:219,s10:10.02,s20c:null,s20b:16.52,thr:7.1,back:94,flex:37.2,sit:44},
+'5월':{jeom:232,s10:9.69,s20c:17.35,s20b:null,thr:8.2,back:121,flex:36.4,sit:47},
+'6월':{jeom:225,s10:9.61,s20c:null,s20b:16.39,thr:8.6,back:117,flex:35.7,sit:48}
+}},
+'이다혜':{school:'이음고',g:'F',rec:{
+'11월':{jeom:215,s10:9.93,s20c:17.13,s20b:null,thr:6.9,back:195,flex:27.8,sit:25},
+'12월':{jeom:225,s10:9.65,s20c:null,s20b:16.55,thr:6.8,back:100.5,flex:29.4,sit:24},
+'1월':{jeom:224,s10:9.47,s20c:17.18,s20b:null,thr:7.1,back:85,flex:29.6,sit:30},
+'2월':{jeom:232,s10:9.86,s20c:null,s20b:16.24,thr:7.3,back:89.5,flex:29.4,sit:26},
+'3월':{jeom:239,s10:9.59,s20c:16.87,s20b:null,thr:7,back:107,flex:29,sit:null},
+'4월':{jeom:226,s10:9.7,s20c:null,s20b:16.22,thr:7.5,back:86,flex:30.2,sit:null},
+'5월':{jeom:241,s10:9.43,s20c:17.21,s20b:null,thr:7.2,back:92,flex:30.5,sit:null},
+'6월':{jeom:238,s10:9.47,s20c:null,s20b:16.21,thr:7.4,back:85,flex:30.1,sit:34}
+}},
+'이서윤':{school:'서운고',g:'F',rec:{
+'3월':{jeom:193,s10:10.28,s20c:null,s20b:null,thr:5.8,back:72,flex:22.1,sit:null},
+'4월':{jeom:205,s10:10.29,s20c:null,s20b:17.68,thr:6,back:87.5,flex:23.8,sit:null},
+'5월':{jeom:215,s10:9.95,s20c:null,s20b:null,thr:5.9,back:93,flex:23.3,sit:null},
+'6월':{jeom:211,s10:10.08,s20c:null,s20b:17.21,thr:6,back:95,flex:23.7,sit:null}
+}},
+'이영찬':{school:'삼산고',g:'M',rec:{
+'2월':{jeom:244,s10:8.99,s20c:null,s20b:15.55,thr:10.3,back:128.5,flex:20.7,sit:41},
+'3월':{jeom:265,s10:8.96,s20c:15.86,s20b:null,thr:10.1,back:129,flex:21,sit:null},
+'4월':{jeom:263,s10:8.95,s20c:null,s20b:15.38,thr:10,back:107.5,flex:23.3,sit:47},
+'5월':{jeom:263,s10:9.2,s20c:16.11,s20b:null,thr:10.5,back:135,flex:24.6,sit:44},
+'6월':{jeom:270,s10:8.77,s20c:null,s20b:14.92,thr:11,back:125.5,flex:23.9,sit:47}
+}},
+'이예람':{school:'작전여고',g:'F',rec:{
+'1월':{jeom:176,s10:11.11,s20c:19.56,s20b:null,thr:5.9,back:108,flex:17.9,sit:23},
+'2월':{jeom:192,s10:10.38,s20c:null,s20b:17.39,thr:6,back:85.5,flex:15.9,sit:28},
+'3월':{jeom:212,s10:9.75,s20c:17.43,s20b:null,thr:6.1,back:94.5,flex:15.4,sit:null},
+'4월':{jeom:218,s10:9.49,s20c:null,s20b:16.41,thr:7.5,back:84.5,flex:18.6,sit:39},
+'5월':{jeom:230,s10:9.37,s20c:17.27,s20b:null,thr:6.7,back:98,flex:17.2,sit:37},
+'6월':{jeom:228,s10:9.32,s20c:null,s20b:16.34,thr:7.4,back:95.5,flex:17.9,sit:null}
+}},
+'이예빈B':{school:'문학정보고',g:'F',rec:{
+'3월':{jeom:237,s10:9.37,s20c:17.14,s20b:null,thr:8.3,back:135.5,flex:25.8,sit:null},
+'4월':{jeom:246,s10:9.22,s20c:null,s20b:15.7,thr:8.8,back:161.5,flex:26.1,sit:48},
+'5월':{jeom:246,s10:9.39,s20c:16.09,s20b:null,thr:9,back:155.5,flex:null,sit:55},
+'6월':{jeom:243,s10:8.87,s20c:null,s20b:15.24,thr:9.2,back:154,flex:25.1,sit:58}
+}},
+'이유린':{school:'원당고',g:'F',rec:{
+'2월':{jeom:211,s10:10.25,s20c:null,s20b:17,thr:7.5,back:94.5,flex:15.6,sit:25},
+'3월':{jeom:197,s10:9.73,s20c:17.17,s20b:null,thr:8.8,back:111.5,flex:13,sit:null},
+'4월':{jeom:222,s10:9.87,s20c:null,s20b:16.29,thr:9,back:122.5,flex:13.4,sit:30},
+'5월':{jeom:231,s10:9.82,s20c:17.65,s20b:null,thr:8.7,back:114.5,flex:11.9,sit:33},
+'6월':{jeom:224,s10:9.54,s20c:null,s20b:15.89,thr:9.6,back:129.5,flex:13.4,sit:29}
+}},
+'이의진':{school:'삼산고',g:'M',rec:{
+'11월':{jeom:252,s10:9.16,s20c:16.56,s20b:null,thr:8.3,back:204.5,flex:-6.6,sit:33},
+'12월':{jeom:254,s10:8.73,s20c:null,s20b:14.93,thr:9.1,back:215.5,flex:-4.6,sit:38},
+'1월':{jeom:270,s10:8.85,s20c:16.29,s20b:null,thr:9.3,back:207.5,flex:-1.2,sit:37},
+'2월':{jeom:271,s10:8.84,s20c:null,s20b:15.11,thr:10,back:210,flex:-3.1,sit:38},
+'3월':{jeom:277,s10:8.78,s20c:15.6,s20b:null,thr:8.8,back:211.5,flex:-2.3,sit:null},
+'4월':{jeom:282,s10:8.63,s20c:null,s20b:14.72,thr:9.8,back:219,flex:1.4,sit:40},
+'5월':{jeom:290,s10:8.47,s20c:15.69,s20b:null,thr:9.7,back:221.5,flex:null,sit:45},
+'6월':{jeom:292,s10:8.79,s20c:null,s20b:15.12,thr:10.5,back:232,flex:null,sit:46}
+}},
+'이지수':{school:'부평여고',g:'F',rec:{
+'3월':{jeom:178,s10:10.43,s20c:18.38,s20b:null,thr:5.9,back:69.5,flex:26.3,sit:null},
+'4월':{jeom:204,s10:10.1,s20c:null,s20b:18.2,thr:5.6,back:84,flex:27.6,sit:35},
+'5월':{jeom:211,s10:9.93,s20c:18.36,s20b:null,thr:6,back:97,flex:29.7,sit:38},
+'6월':{jeom:206,s10:9.8,s20c:null,s20b:16.83,thr:null,back:106.5,flex:30,sit:41}
+}},
+'이환희':{school:'원당고',g:'M',rec:{
+'4월':{jeom:261,s10:9.01,s20c:null,s20b:14.94,thr:7.5,back:151,flex:6.7,sit:40},
+'6월':{jeom:260,s10:8.98,s20c:null,s20b:14.72,thr:7.6,back:121,flex:null,sit:41}
+}},
+'인지훈':{school:'삼산고',g:'M',rec:{
+'11월':{jeom:270,s10:8.91,s20c:15.44,s20b:null,thr:8.2,back:152.5,flex:5.9,sit:50},
+'12월':{jeom:277,s10:8.42,s20c:null,s20b:14.01,thr:8.9,back:169.5,flex:8.6,sit:53},
+'1월':{jeom:290,s10:8.38,s20c:15.01,s20b:null,thr:9,back:167.5,flex:9.1,sit:50},
+'2월':{jeom:296,s10:8.59,s20c:null,s20b:14.34,thr:9.1,back:171,flex:10.2,sit:49},
+'3월':{jeom:290,s10:8.38,s20c:14.95,s20b:null,thr:8.6,back:194,flex:9.9,sit:null},
+'4월':{jeom:301,s10:8.32,s20c:null,s20b:14.68,thr:8.8,back:195,flex:7.9,sit:54},
+'5월':{jeom:292,s10:8.3,s20c:14.75,s20b:null,thr:9.6,back:212.5,flex:10.5,sit:59},
+'6월':{jeom:294,s10:8.23,s20c:null,s20b:13.84,thr:9.9,back:225,flex:8.2,sit:59}
+}},
+'임규명':{school:'부평고',g:'M',rec:{
+'5월':{jeom:208,s10:9.93,s20c:null,s20b:null,thr:null,back:117,flex:8.4,sit:23},
+'6월':{jeom:207,s10:10.09,s20c:null,s20b:16.08,thr:7.4,back:123,flex:9.5,sit:null}
+}},
+'임준희':{school:'안남고',g:'M',rec:{
+'5월':{jeom:247,s10:8.71,s20c:15.37,s20b:null,thr:9.9,back:156.5,flex:20.8,sit:42},
+'6월':{jeom:260,s10:8.69,s20c:null,s20b:14.98,thr:10.6,back:205.5,flex:20.2,sit:null}
+}},
+'임지민':{school:'부개여고',g:'F',rec:{
+'3월':{jeom:197,s10:11.02,s20c:18.16,s20b:null,thr:6.6,back:77,flex:14.1,sit:null},
+'4월':{jeom:208,s10:10.16,s20c:null,s20b:17.08,thr:6.3,back:102.5,flex:13.1,sit:47},
+'5월':{jeom:211,s10:9.83,s20c:17.59,s20b:null,thr:7.6,back:105.5,flex:13.8,sit:51},
+'6월':{jeom:213,s10:9.69,s20c:null,s20b:17.05,thr:7.6,back:110.5,flex:15.9,sit:51}
+}},
+'장예지':{school:'신명여고',g:'F',rec:{
+'11월':{jeom:222,s10:9.62,s20c:17,s20b:null,thr:6.8,back:106.5,flex:20.4,sit:39},
+'12월':{jeom:221,s10:9.64,s20c:null,s20b:16.17,thr:7.1,back:85.5,flex:19.6,sit:41},
+'1월':{jeom:226,s10:9.2,s20c:16.97,s20b:null,thr:7.6,back:95,flex:20,sit:40},
+'2월':{jeom:230,s10:9.23,s20c:null,s20b:16.03,thr:7.7,back:98.5,flex:18.7,sit:null},
+'3월':{jeom:237,s10:null,s20c:16.5,s20b:null,thr:7.7,back:136,flex:17.5,sit:null},
+'5월':{jeom:null,s10:9.15,s20c:16.79,s20b:null,thr:7.8,back:132,flex:19.1,sit:null},
+}},
+'장지승':{school:'영종고',g:'M',rec:{
+'5월':{jeom:302,s10:7.47,s20c:14.51,s20b:null,thr:12.8,back:227,flex:26.4,sit:null},
+'6월':{jeom:299,s10:7.85,s20c:null,s20b:13.74,thr:12.5,back:221,flex:25.7,sit:null}
+}},
+'전준호':{school:'서운고',g:'M',rec:{
+'2월':{jeom:282,s10:8.74,s20c:null,s20b:14.45,thr:7.1,back:162.5,flex:25.7,sit:null},
+'3월':{jeom:284,s10:8.53,s20c:14.72,s20b:null,thr:8.4,back:203,flex:25.6,sit:null},
+'4월':{jeom:305,s10:8.36,s20c:null,s20b:14.07,thr:9.1,back:204,flex:25,sit:null},
+'5월':{jeom:309,s10:8.47,s20c:14.62,s20b:null,thr:9.6,back:238.5,flex:26.4,sit:null},
+'6월':{jeom:307,s10:8.56,s20c:null,s20b:13.95,thr:9.2,back:186.5,flex:null,sit:null}
+}},
+'전지민':{school:'세일고',g:'M',rec:{
+'2월':{jeom:275,s10:null,s20c:null,s20b:14.51,thr:10.5,back:186.5,flex:26.4,sit:null},
+'3월':{jeom:272,s10:8.66,s20c:15.48,s20b:null,thr:11.4,back:196.5,flex:27.1,sit:null},
+'4월':{jeom:282,s10:8.88,s20c:null,s20b:14.51,thr:10.5,back:209,flex:26.1,sit:45},
+'5월':{jeom:283,s10:8.39,s20c:15.4,s20b:null,thr:11.4,back:233,flex:25.8,sit:43},
+'6월':{jeom:293,s10:8.44,s20c:null,s20b:14.45,thr:11.5,back:209.5,flex:null,sit:null}
+}},
+'정석형':{school:'작전고',g:'M',rec:{
+'3월':{jeom:301,s10:8.41,s20c:15.26,s20b:null,thr:15,back:270,flex:29.7,sit:null},
+'5월':{jeom:301,s10:8.13,s20c:15.35,s20b:null,thr:15.4,back:273.5,flex:28.7,sit:64},
+'6월':{jeom:299,s10:8.42,s20c:null,s20b:14.16,thr:14.3,back:null,flex:30.2,sit:null}
+}},
+'정태준':{school:'서운고',g:'M',rec:{
+'5월':{jeom:null,s10:8.27,s20c:14.67,s20b:null,thr:11.2,back:248.5,flex:16.2,sit:60},
+'6월':{jeom:297,s10:null,s20c:null,s20b:14.26,thr:12.8,back:221.5,flex:16.2,sit:57}
+}},
+'조민경':{school:'세원고',g:'F',rec:{
+'5월':{jeom:201,s10:10.39,s20c:18.1,s20b:null,thr:4.7,back:67,flex:12.3,sit:32},
+'6월':{jeom:202,s10:9.88,s20c:null,s20b:16.98,thr:6.2,back:79.5,flex:13.4,sit:34}
+}},
+'조용우':{school:'인천남고',g:'M',rec:{
+'1월':{jeom:239,s10:8.83,s20c:15.71,s20b:null,thr:8.7,back:140.5,flex:22,sit:45},
+'2월':{jeom:260,s10:8.61,s20c:null,s20b:14.46,thr:9.1,back:187.5,flex:19.7,sit:51},
+'3월':{jeom:267,s10:8.25,s20c:14.87,s20b:null,thr:8.4,back:210.5,flex:19.1,sit:null},
+'4월':{jeom:264,s10:8.27,s20c:null,s20b:14.11,thr:8.4,back:209.5,flex:20.3,sit:50},
+'5월':{jeom:266,s10:8.22,s20c:14.73,s20b:null,thr:9.4,back:237,flex:21,sit:53},
+'6월':{jeom:271,s10:8.18,s20c:null,s20b:13.98,thr:9.1,back:227,flex:20.7,sit:null}
+}},
+'최범규':{school:'가림고',g:'M',rec:{
+'1월':{jeom:226,s10:9.53,s20c:16.02,s20b:null,thr:8.2,back:129,flex:5.5,sit:null},
+'2월':{jeom:239,s10:8.9,s20c:null,s20b:15.02,thr:9.6,back:158,flex:5.9,sit:null},
+'3월':{jeom:249,s10:8.95,s20c:15.46,s20b:null,thr:9.2,back:177.5,flex:7,sit:null},
+'4월':{jeom:246,s10:8.61,s20c:null,s20b:14.48,thr:10,back:164,flex:null,sit:null},
+'5월':{jeom:249,s10:8.46,s20c:15.41,s20b:null,thr:9.8,back:180.5,flex:6.1,sit:null},
+}},
+'최연우':{school:'인천외고',g:'M',rec:{
+'11월':{jeom:null,s10:8.91,s20c:15.75,s20b:null,thr:7.1,back:119,flex:9,sit:36},
+'12월':{jeom:274,s10:8.76,s20c:null,s20b:14.66,thr:7.4,back:131,flex:null,sit:47},
+'1월':{jeom:270,s10:8.89,s20c:15.13,s20b:null,thr:7.4,back:143,flex:6.4,sit:42},
+'2월':{jeom:266,s10:8.89,s20c:null,s20b:14.63,thr:8.1,back:146.5,flex:10.1,sit:50},
+'3월':{jeom:277,s10:8.55,s20c:14.8,s20b:null,thr:8.7,back:162,flex:7.7,sit:null},
+'4월':{jeom:286,s10:8.58,s20c:null,s20b:14.45,thr:8.3,back:158.5,flex:11.5,sit:55},
+'5월':{jeom:282,s10:8.5,s20c:14.93,s20b:null,thr:8.5,back:179.5,flex:-0.2,sit:null},
+}},
+'최한결':{school:'영선고',g:'M',rec:{
+'11월':{jeom:258,s10:8.76,s20c:15.29,s20b:null,thr:8.8,back:159,flex:20,sit:null},
+'12월':{jeom:280,s10:8.47,s20c:null,s20b:14.2,thr:8.9,back:135,flex:20.1,sit:61},
+'1월':{jeom:277,s10:8.33,s20c:14.81,s20b:null,thr:8.8,back:172,flex:20.2,sit:63},
+'2월':{jeom:275,s10:8.84,s20c:null,s20b:13.85,thr:8.7,back:171,flex:21.1,sit:69},
+'3월':{jeom:290,s10:8.32,s20c:14.6,s20b:null,thr:9.9,back:159,flex:18.4,sit:null},
+'4월':{jeom:282,s10:null,s20c:null,s20b:14,thr:8.9,back:171.5,flex:null,sit:65},
+'5월':{jeom:281,s10:8.01,s20c:14.78,s20b:null,thr:10.2,back:170,flex:18.1,sit:71},
+'6월':{jeom:290,s10:8.04,s20c:null,s20b:13.91,thr:9.5,back:188.5,flex:20.6,sit:null}
+}},
+'추은비':{school:'신명여고',g:'F',rec:{
+'11월':{jeom:177,s10:11.56,s20c:19.47,s20b:null,thr:5.1,back:92,flex:26,sit:28},
+'12월':{jeom:203,s10:10.47,s20c:null,s20b:18.7,thr:6.9,back:91,flex:24.7,sit:30},
+'1월':{jeom:188,s10:10.47,s20c:18.88,s20b:null,thr:7.5,back:83.5,flex:25.5,sit:27},
+'2월':{jeom:201,s10:10.39,s20c:null,s20b:17.31,thr:7,back:87.5,flex:23.3,sit:33},
+'3월':{jeom:199,s10:10.33,s20c:18.09,s20b:null,thr:7.6,back:103,flex:23.5,sit:null},
+'4월':{jeom:198,s10:10.17,s20c:null,s20b:17.21,thr:6.1,back:108.5,flex:24.2,sit:38},
+'5월':{jeom:205,s10:10.04,s20c:18.25,s20b:null,thr:7.6,back:111.5,flex:24.1,sit:36},
+'6월':{jeom:203,s10:9.89,s20c:null,s20b:17.61,thr:7.7,back:129,flex:25,sit:36}
+}},
+'피관현':{school:'영선고',g:'M',rec:{
+'1월':{jeom:267,s10:9.2,s20c:15.23,s20b:null,thr:8.1,back:166,flex:25.2,sit:49},
+'2월':{jeom:260,s10:8.69,s20c:null,s20b:14.62,thr:8.8,back:160,flex:29.3,sit:63},
+'3월':{jeom:278,s10:8.59,s20c:15.09,s20b:null,thr:8.8,back:128.5,flex:28.2,sit:null},
+'4월':{jeom:287,s10:8.24,s20c:null,s20b:14,thr:9,back:144.5,flex:28.3,sit:57},
+'5월':{jeom:286,s10:8.37,s20c:14.97,s20b:null,thr:10,back:135,flex:29.2,sit:56},
+'6월':{jeom:280,s10:8.34,s20c:null,s20b:14.06,thr:9.7,back:154,flex:29.5,sit:null}
+}},
+'하태현':{school:'아라고',g:'M',rec:{
+'11월':{jeom:279,s10:8.56,s20c:14.53,s20b:null,thr:10.3,back:145,flex:null,sit:63},
+'12월':{jeom:288,s10:8.23,s20c:null,s20b:13.52,thr:10.7,back:167,flex:12.5,sit:66},
+'1월':{jeom:282,s10:8.39,s20c:14.89,s20b:null,thr:9.7,back:141.5,flex:11.4,sit:50},
+'2월':{jeom:290,s10:8.34,s20c:null,s20b:13.83,thr:10.3,back:154.5,flex:12.3,sit:58},
+'3월':{jeom:302,s10:8.58,s20c:14.46,s20b:null,thr:12.3,back:160,flex:12.9,sit:null},
+'4월':{jeom:286,s10:null,s20c:null,s20b:null,thr:10.8,back:null,flex:null,sit:60},
+'5월':{jeom:301,s10:8.28,s20c:14.81,s20b:null,thr:11.5,back:189,flex:null,sit:63},
+'6월':{jeom:300,s10:8.34,s20c:null,s20b:14.09,thr:6.1,back:179,flex:null,sit:57}
+}},
+'허유나':{school:'예고',g:'F',rec:{
+'2월':{jeom:189,s10:11.8,s20c:null,s20b:19.39,thr:5,back:55.5,flex:24.1,sit:null},
+'3월':{jeom:184,s10:11.16,s20c:19.06,s20b:null,thr:6.3,back:63,flex:25.3,sit:null},
+'4월':{jeom:204,s10:10.61,s20c:null,s20b:17.76,thr:6.5,back:66.5,flex:26.6,sit:33},
+'5월':{jeom:197,s10:10.69,s20c:19.04,s20b:null,thr:6,back:77,flex:26.8,sit:32},
+'6월':{jeom:191,s10:10.7,s20c:null,s20b:18.55,thr:6,back:80.5,flex:27.6,sit:30}
+}},
+'황석준':{school:'검정고시',g:'M',rec:{
+'3월':{jeom:293,s10:null,s20c:14.89,s20b:null,thr:null,back:226,flex:32,sit:null},
+'4월':{jeom:295,s10:8.28,s20c:null,s20b:14.19,thr:null,back:203,flex:30.8,sit:73},
+'6월':{jeom:303,s10:null,s20c:null,s20b:null,thr:11.8,back:202.5,flex:31.9,sit:78}
+}},
+'김민규C':{school:'계산고',g:'M',rec:{
+'6월':{jeom:251,s10:9.07,s20c:null,s20b:14.52,thr:6.8,back:107,flex:22.2,sit:38}
+}},
+'김한비':{school:'부개여고',g:'F',rec:{
+'6월':{jeom:212,s10:11.27,s20c:null,s20b:17.3,thr:6.1,back:96,flex:20.8,sit:38}
+}},
+'남태현':{school:'인천남고',g:'M',rec:{
+'6월':{jeom:280,s10:8.63,s20c:null,s20b:14.12,thr:8.5,back:151.5,flex:24.1,sit:47}
+}},
+'문종민':{school:'서운고',g:'M',rec:{
+'6월':{jeom:266,s10:8.78,s20c:null,s20b:14.9,thr:9.1,back:141,flex:23.5,sit:33}
+}},
+'박준서C':{school:'계산고',g:'M',rec:{
+'6월':{jeom:259,s10:8.56,s20c:null,s20b:14.6,thr:7.2,back:153,flex:21.4,sit:32}
+}},
+'윤우진':{school:'가림고',g:'M',rec:{
+'6월':{jeom:266,s10:8.6,s20c:null,s20b:14.92,thr:11,back:173,flex:10.5,sit:49}
+}},
+'이창혁':{school:'부광고',g:'M',rec:{
+'6월':{jeom:249,s10:8.47,s20c:null,s20b:null,thr:null,back:119,flex:7.9,sit:41}
+}},
+'조수성':{school:'서운고',g:'M',rec:{
+'6월':{jeom:224,s10:9.89,s20c:null,s20b:16.23,thr:7.2,back:120.5,flex:10.8,sit:41}
+}},
+'조은비':{school:'학익여고',g:'F',rec:{
+'6월':{jeom:214,s10:9.6,s20c:null,s20b:16.92,thr:8.4,back:113.5,flex:27.2,sit:58}
+}},
+};
+
+const TEAMS={
+  'TEAM다빈':{color:'#ec4899',teachers:['도현','현수','지은','다빈']},
+  'TEAM경준':{color:'#6366f1',teachers:['주혁','유선','경준']},
+  'TEAM병찬':{color:'#d97706',teachers:['준기','소윤','병찬']}
+};const TEACHERS={
+  '도현':{color:'#3b82f6',bg:'#eff6ff',students:['전지민','문성현b','김민서D','최한결','피관현','박규정','김준석','권순후','송준우','성지호','이의진','인지훈','김민규']},
+  '현수':{color:'#10b981',bg:'#f0fdf4',students:['강윤호B','이영찬','서상윤','임준희','임규명','김민규C','박준서C','정은섭']},
+  '지은':{color:'#8b5cf6',bg:'#f5f3ff',students:['원채이','이예빈B','박시원','유은결','이다혜','송채린','심하람','고예림','윤채은','조민경','류단']},
+  '다빈':{color:'#ec4899',bg:'#fdf2f8',students:['김나린','허유나','염수연','김수영','강은하','조은비','이선아','김도원','김예담']},
+  '주혁':{color:'#f59e0b',bg:'#fffbeb',students:['나은수','윤수한','하태현','유승현B','곽은철','성연수','유준영B','김용우','김규형','전준호','김지호','김세헌','이환희','정태준']},
+  '유선':{color:'#06b6d4',bg:'#ecfeff',students:['이유린','안채민','윤해정','김연빈','임지민','박한울','김한슬','이서윤','김규민B','노윤서','김한비']},
+  '경준':{color:'#6366f1',bg:'#eef2ff',students:['원재연','김규혁','황석준','김소현']},
+  '준기':{color:'#ef4444',bg:'#fef2f2',students:['최범규','조용우','최연우','김의찬','김도훈','김하윤','김은호','남지웅','김동준','신익희','구건모','윤찬희','박재우','남태현','윤우진','이창혁']},
+  '소윤':{color:'#f43f5e',bg:'#fff1f2',students:['이예람','김태린','나규리','송승현','장예지','추은비','서우령','박서진B','이지수','방우솔','송주원','김태연B']},
+  '병찬':{color:'#d97706',bg:'#fef9de',students:['서형욱','장지승','최병찬','최문용','오도환','이승현']}
+};let STU_STATUS=(()=>{const d={'염수연':'휴원','김수영':'휴원','신익희':'휴원','서우령':'휴원'};try{const s=JSON.parse(localStorage.getItem('k1_stu_status')||'null');return s||d;}catch(e){return d;}})();
+const METRICS=[
+  {key:'jeom',label:'제자리멀리뛰기',short:'제멀',unit:'cm',hb:true,thr:5,ci:0,useAll:true,cat:'도약'},
+  {key:'s10',label:'10M 부저',short:'10M부저',unit:'초',hb:false,thr:0.1,ci:1,useAll:true,cat:'스프린트'},
+  {key:'s20c',label:'20M 콘',short:'20M콘',unit:'초',hb:false,thr:0.2,ci:2,useAll:false,cat:'스프린트'},
+  {key:'s20b',label:'20M 부저',short:'20M부저',unit:'초',hb:false,thr:0.15,ci:3,useAll:false,cat:'스프린트'},
+  {key:'thr',label:'던지기',short:'던지기',unit:'m',hb:true,thr:0.3,ci:4,useAll:true,cat:'투척'},
+  {key:'back',label:'배근력',short:'배근력',unit:'kg',hb:true,thr:10,ci:5,useAll:true,cat:'근력'},
+  {key:'flex',label:'좌전굴',short:'좌전굴',unit:'cm',hb:true,thr:2,ci:6,useAll:true,cat:'유연성'},
+  {key:'sit',label:'싯업',short:'싯업',unit:'회',hb:true,thr:3,ci:7,useAll:true,cat:'코어'},
+];
+const TBL_COLS=[
+  {key:'jeom',label:'제멀',unit:'cm'},{key:'s10',label:'10M부저',unit:'초'},
+  {key:'s20c',label:'20M콘',unit:'초'},{key:'s20b',label:'20M부저',unit:'초'},
+  {key:'thr',label:'던지기',unit:'m'},{key:'back',label:'배근력',unit:'kg'},
+  {key:'flex',label:'좌전굴',unit:'cm'},{key:'sit',label:'싯업',unit:'회'},
+];
+const PROG={
+  jeom:{icon:'🦵',title:'제멀 트레이닝',
+    good:{msg:'꾸준히 향상 중. 심화 루틴(16번 이상)으로 단계를 높여보세요.',drill:'✅ 루틴 16번 — 셔틀콕 타이밍 → 스텝박스 활용 → 연속도약\
+✅ 루틴 18번 — 충격도약 → 덤벨/메볼 활용 → 동적뻗기2'},
+    warn:{msg:'개선이 더딥니다. 도약 출력과 리듬 루틴에 집중하세요.',drill:'🔁 루틴 6번 — 바닥밀기 → 도약타이밍 → 드라이브\
+🔁 루틴 8번 — 발목탄력 → 도약타이밍 → 연속도약'},
+    danger:{msg:'정체 상태. 기초 드릴부터 재점검이 필요합니다.',drill:'⚠️ 도약5(도약타이밍) · 도약10(바닥밀기) · 도약7(발목탄력) 반복\
+⚠️ 루틴 1번 — 도약타이밍 → 드라이브 → 정적뻗기'}},
+  s10:{icon:'⚡',title:'10M 부저',
+    good:{msg:'기록 개선 중. 정확한 제어와 거리조절 훈련 유지.',drill:'✅ 1번 정확한 제어(부저) + 2번 거리조절 유지'},
+    warn:{msg:'개선이 필요합니다. 부저 감각과 제어 훈련 집중.',drill:'🔁 1번 정확한 제어(부저) → 2번 거리조절 집중\
+🔁 3번 콘 트레이닝 병행'},
+    danger:{msg:'정체 상태. 공통 드릴부터 재점검.',drill:'⚠️ 공통 1번 — 코어·무게중심(부저) 재점검\
+⚠️ 공통 2번 — 턴 기울기(부저) 교정'}},
+  s20c:{icon:'🔵',title:'20M 콘',
+    good:{msg:'콘 기록 향상 중. 제어와 턴·보폭감 훈련 유지.',drill:'✅ 3번 제어와 턴(콘) + 4번 보폭감 유지'},
+    warn:{msg:'콘 개선 필요. 턴 제어와 보폭 훈련 집중.',drill:'🔁 3번 제어와 턴(콘) 집중\
+🔁 4번 보폭감 훈련 추가'},
+    danger:{msg:'정체 상태. 턴 기울기부터 재점검.',drill:'⚠️ 공통 3번 — 턴 기울기(콘) 재점검\
+⚠️ 3번 제어와 턴(콘) → 4번 보폭감'}},
+  s20b:{icon:'🔴',title:'20M 부저',
+    good:{msg:'부저 기록 향상 중. 고무줄 부하 훈련으로 심화.',drill:'✅ 5번 고무줄 부하(부저) 추가'},
+    warn:{msg:'부저 개선 필요. 제어와 거리조절 집중.',drill:'🔁 1번 정확한 제어(부저) → 2번 거리조절 → 5번 고무줄 부하'},
+    danger:{msg:'정체 상태. 기본 제어 감각부터 재점검.',drill:'⚠️ 공통 1번 — 코어·무게중심(부저) 재점검\
+⚠️ 1번 정확한 제어(부저) 집중'}},
+  thr:{icon:'🎯',title:'던지기 트레이닝',
+    good:{msg:'꾸준히 성장 중. 전달·상체 심화 루틴으로 단계를 높여보세요.',drill:'✅ 루틴 11번 — 어깨속근 → 릴리즈포인트 → 실전\
+✅ 루틴 20번 — 상체타이밍 → 복압 던지기 → 실전'},
+    warn:{msg:'개선이 더딥니다. 타이밍과 릴리즈 집중.',drill:'🔁 루틴 2번 — 스윙속도 → 릴리즈포인트\
+🔁 루틴 5번 — 고무줄스윙 → 릴리즈포인트'},
+    danger:{msg:'정체 상태. 하체 임팩트 전달 감각 재점검.',drill:'⚠️ 1번 밸런스 · 4번 릴리즈포인트 · 9번 코코넛깨기\
+⚠️ 루틴 6번 — 코코넛깨기 → 릴리즈포인트'}},
+  back:{icon:'💪',title:'근력 (역도·랜드마인)',
+    good:{msg:'배근력 증가 중. 역도(클린) 또는 복합근력 세션 유지.',drill:'✅ 역도 세션 — 클린 중량 점진적 증가\
+✅ 랜드마인 세션 병행'},
+    warn:{msg:'향상 더딥니다. 역도·랜드마인 교차 편성.',drill:'🔁 역도(클린) ↔ 랜드마인 주 2회 교차\
+🔁 하체근력 세션 추가'},
+    danger:{msg:'정체/감소. 후면사슬 전체 재점검.',drill:'⚠️ 하체근력 → 역도(클린) → 랜드마인 순서 재점검\
+⚠️ 배근력 피드백 세션 별도 편성'}},
+  flex:{icon:'🤸',title:'기능성 (가동범위)',
+    good:{msg:'유연성 개선 중. 복합기능성 세션 유지.',drill:'✅ 복합기능성운동 세션 유지\
+✅ 8번 가동범위 체크 매 세션'},
+    warn:{msg:'가동범위 개선 필요. 기능성 세션 증가.',drill:'🔁 8번 가동범위 체크 의무화\
+🔁 복합기능성운동 주 2회 이상'},
+    danger:{msg:'정체 상태. 기능성 세션 빈도 대폭 증가 필요.',drill:'⚠️ 8번 가동범위 체크 매 세션 의무화\
+⚠️ 하체 기능성 세션(발목탄력·순발력) 주 3회'}},
+  sit:{icon:'🔥',title:'코어 (싯업·복압)',
+    good:{msg:'싯업 향상 중. 복압 던지기 드릴과 연계.',drill:'✅ 던지기 16번 복압 던지기 드릴 연계'},
+    warn:{msg:'코어 강화 필요. 복압 드릴 + 상체근력 병행.',drill:'🔁 던지기 16번 복압 던지기 드릴\
+🔁 상체근력 세션 + 싯업 볼륨 증가'},
+    danger:{msg:'정체 상태. 복압 연결 감각부터 확보.',drill:'⚠️ 던지기 16번 복압 던지기로 코어 연결\
+⚠️ 루틴 17번 — 코코넛깨기 → 복압 던지기 → 실전'}}
+};
+
+// ── 헬퍼 함수 ──
+function mths(mt){return mt.useAll?MONTHS:(mt.key==='s20c'?CON_MONTHS:BUZ_MONTHS);}
+function getVals(rec,key,ms){return ms.map(m=>rec[m]?rec[m][key]:null);}
+function getTeacher(name){
+  for(const[t,info]of Object.entries(TEACHERS)){if(info.students.includes(name))return t;}
+  return '미배정';
+}
+function calcStag(name){
+  const s=STUDENTS[name];if(!s)return{danger:0,warn:0,good:0,score:0};
+  let d=0,w=0,g=0;
+  METRICS.forEach(mt=>{
+    const vals=getVals(s.rec,mt.key,mths(mt));
+    const valid=vals.filter(v=>v!==null);
+    if(valid.length<2)return;
+    const recent=valid.slice(-3);
+    const diff=recent[recent.length-1]-recent[0];
+    const imp=mt.hb?diff:-diff;
+    if(imp>mt.thr*2)g++;else if(imp>=-mt.thr)w++;else d++;
+  });
+  return{danger:d,warn:w,good:g,score:d*2+w};
+}
+function calcScore(name){
+  const s=STUDENTS[name];if(!s)return null;
+  let total=0,max=0;
+  METRICS.forEach(mt=>{
+    const vals=getVals(s.rec,mt.key,mths(mt));
+    const valid=vals.filter(v=>v!==null);
+    if(valid.length<2)return;
+    const recent=valid.slice(-3);
+    const diff=recent[recent.length-1]-recent[0];
+    const imp=mt.hb?diff:-diff;
+    max+=2;
+    if(imp>mt.thr*2)total+=2;else if(imp>=-mt.thr)total+=1;
+  });
+  return max>0?Math.round(total/max*100):null;
+}
+function scoreLvl(sc){
+  if(sc===null)return{label:'데이터부족',cls:'fl',bg:'#f1f5f9',c:'#64748b'};
+  if(sc>=75)return{label:'우수',cls:'up',bg:'#dcfce7',c:'#16a34a'};
+  if(sc>=50)return{label:'양호',cls:'fl',bg:'#dbeafe',c:'#2563eb'};
+  if(sc>=30)return{label:'보통',cls:'fl',bg:'#fef9c3',c:'#ca8a04'};
+  return{label:'관리필요',cls:'dn',bg:'#fee2e2',c:'#dc2626'};
+}
+function getStagCauses(name){
+  const s=STUDENTS[name];if(!s)return[];
+  const cats={};
+  METRICS.forEach(mt=>{
+    const vals=getVals(s.rec,mt.key,mths(mt));
+    const valid=vals.filter(v=>v!==null);
+    if(valid.length<2)return;
+    const recent=valid.slice(-3);
+    const diff=recent[recent.length-1]-recent[0];
+    const imp=mt.hb?diff:-diff;
+    const lv=imp>mt.thr*2?'good':(imp>=-mt.thr?'warn':'danger');
+    if(!cats[mt.cat]||lv==='danger')cats[mt.cat]=lv;
+    else if(cats[mt.cat]==='good'&&lv==='warn')cats[mt.cat]=lv;
+  });
+  return Object.entries(cats).filter(([,v])=>v!=='good').map(([k,v])=>({cat:k,lv:v}));
+}
+
+// ── 네비게이션 ──
+const PAGE_META={
+  dashboard:{title:'대시보드',sub:'계양점 전체 현황'},
+  students:{title:'학생별 성취도',sub:'개인 기록 변화 및 트레이닝 제안'},
+  stagnation:{title:'정체학생 관리',sub:'최근 3개월 기준 정체·개선 현황'},
+  records:{title:'상담 / 조치 기록',sub:'부담임 상담 및 실기 피드백 관리'}
+};
+let curPage='dashboard',curStu=null,stuFilter='all',stagFilter='all',recStu=null;
+const CI={};
+
+function goPage(page){
+  curPage=page;
+  document.querySelectorAll('.nav-item').forEach((el,i)=>{
+    el.classList.toggle('active',['dashboard','students','stagnation','records'][i]===page);
+  });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const m=PAGE_META[page];
+  document.getElementById('hdr-title').textContent=m.title;
+  document.getElementById('hdr-sub').textContent=m.sub;
+  if(page==='dashboard')renderDashboard();
+  else if(page==='students')renderStuList();
+  else if(page==='stagnation')renderStagnation();
+  else if(page==='records')renderRecords();
+}
+
+// ── 대시보드 ──
+function goStudentDetail(name){
+  goPage('students');
+  setTimeout(function(){selStu(name);},50);
+}
+function goStuFromMenu(name){closeMenu();setTimeout(function(){goStudentDetail(name);},50);}
+
+const BOARD_VERSION=3;
+let _bst=null;
+function getBSt(){
+  if(_bst)return _bst;
+  try{
+    const s=JSON.parse(localStorage.getItem('k1_board')||'null');
+    if(s&&s.v===BOARD_VERSION){_bst=s;return _bst;}
+  }catch(e){}
+  _bst={v:BOARD_VERSION,cols:Object.entries(TEACHERS).map(([n,i])=>({id:'t_'+n,type:'teacher',label:n,color:i.color,bg:i.bg,students:[...i.students]}))};
+  return _bst;
+}
+function saveBSt(){localStorage.setItem('k1_board',JSON.stringify(_bst));}
+function resetBoard(){
+  if(confirm('부담임 배정을 초기 상태로 초기화할까요?\
+(커스텀 열과 이동 내역이 모두 삭제됩니다)')){
+    localStorage.removeItem('k1_board');_bst=null;renderDashboard();
+  }
+}
+function getClps(){try{return JSON.parse(localStorage.getItem('k1_clps')||'{}');}catch(e){return {};}}
+function saveClps(s){localStorage.setItem('k1_clps',JSON.stringify(s));}
+function toggleTeam(tid){
+  const el=document.getElementById('team-body-'+tid);
+  const tg=document.getElementById('team-tg-'+tid);
+  const s=getClps();if(!s.t)s.t={};s.t[tid]=!s.t[tid];saveClps(s);
+  if(el)el.classList.toggle('hidden',!!s.t[tid]);
+  if(tg)tg.classList.toggle('closed',!!s.t[tid]);
+}
+function toggleCol(cid){
+  const body=document.getElementById('bbody-'+cid);
+  const addBtn=document.getElementById('badd-btn-'+cid);
+  const nm=document.querySelector('#bcol-'+cid+' .board-col-name');
+  const s=getClps();if(!s.c)s.c={};s.c[cid]=!s.c[cid];saveClps(s);
+  if(body)body.classList.toggle('hidden',!!s.c[cid]);
+  if(addBtn)addBtn.classList.toggle('hidden',!!s.c[cid]);
+  if(nm)nm.classList.toggle('bcc',!!s.c[cid]);
+}
+let _dN=null,_dC=null;
+function bDragStart(name,colId,el){_dN=name;_dC=colId;setTimeout(()=>el.classList.add('dragging'),0);}
+function bDragEnd(el){el.classList.remove('dragging');}
+function bDragOver(colId,ev){ev.preventDefault();document.getElementById('bcol-'+colId)?.classList.add('bover');}
+function bDragLeave(colId){document.getElementById('bcol-'+colId)?.classList.remove('bover');}
+function bDrop(toColId,ev){
+  ev.preventDefault();
+  document.querySelectorAll('.board-col').forEach(c=>c.classList.remove('bover'));
+  if(!_dN||_dC===toColId){_dN=null;_dC=null;return;}
+  const st=getBSt();
+  const fc=st.cols.find(c=>c.id===_dC);
+  const tc=st.cols.find(c=>c.id===toColId);
+  if(fc&&tc){fc.students=fc.students.filter(n=>n!==_dN);if(!tc.students.includes(_dN))tc.students.push(_dN);saveBSt();}
+  _dN=null;_dC=null;renderDashboard();
+}
+function bAddStu(colId){
+  const body=document.getElementById('bbody-'+colId);
+  if(!body||body.querySelector('.badd-form'))return;
+  const st=getBSt();const col=st.cols.find(c=>c.id===colId);
+  const inCol=new Set(col.students);
+  const all=[...new Set([...Object.keys(STUDENTS),...Object.keys(STU_STATUS)])].filter(n=>!inCol.has(n));
+  const dlId='bdl-'+Date.now();
+  const div=document.createElement('div');div.className='badd-form';
+  div.innerHTML='<input list="'+dlId+'" class="badd-input" placeholder="이름 검색 후 Enter..." onkeydown="bAddCfm(\''+colId+'\',this,event)" onblur="setTimeout(()=>{const f=this.closest(\'.badd-form\');if(f)f.remove();},200)"><datalist id="'+dlId+'">'+all.map(n=>'<option value="'+n+'">').join('')+'</datalist>';
+  body.appendChild(div);div.querySelector('input').focus();
+}
+function bAddCfm(colId,inp,ev){
+  if(ev.key==='Enter'){
+    const name=inp.value.trim();inp.closest('.badd-form')?.remove();
+    if(!name)return;
+    const st=getBSt();const col=st.cols.find(c=>c.id===colId);
+    if(col&&!col.students.includes(name)){col.students.push(name);saveBSt();}
+    renderDashboard();
+  }else if(ev.key==='Escape'){inp.closest('.badd-form')?.remove();}
+}
+function bAddCol(){
+  const name=prompt('새 열 이름을 입력하세요\
+(예: 최근 이슈, 특별 관리, 부상 학생)');
+  if(!name||!name.trim())return;
+  const st=getBSt();
+  const colors=['#6366f1','#ec4899','#f59e0b','#10b981','#14b8a6','#ef4444'];
+  const color=colors[st.cols.filter(c=>c.type==='custom').length%colors.length];
+  st.cols.push({id:'c_'+Date.now(),type:'custom',label:name.trim(),color,students:[]});
+  saveBSt();renderDashboard();
+}
+function bRemoveCol(colId){
+  const st=getBSt();const col=st.cols.find(c=>c.id===colId);
+  if(col&&confirm('"'+col.label+'" 열을 삭제할까요?')){st.cols=st.cols.filter(c=>c.id!==colId);saveBSt();renderDashboard();}
+}
+function bRemoveStu(colId,name){
+  closeMenu();
+  const st=getBSt();const col=st.cols.find(c=>c.id===colId);
+  if(col){col.students=col.students.filter(n=>n!==name);saveBSt();renderDashboard();}
+}
+function closeMenu(){document.querySelectorAll('.bcm-popup').forEach(m=>m.remove());}
+function bCardMenu(name,colId,el,ev){
+  ev.stopPropagation();closeMenu();
+  const status=STU_STATUS[name]||'';
+  const hasData=!!STUDENTS[name];
+  let items='';
+  if(hasData&&status!=='휴원') items+='<div class="bcm-item" onclick="goStuFromMenu(\''+name+'\')">상세 보기</div>';
+  if(status==='휴원') items+='<div class="bcm-item bcm-green" onclick="bSetStatus(\''+name+'\',null)">✓ 휴원 해제</div>';
+  else items+='<div class="bcm-item bcm-red" onclick="bSetStatus(\''+name+'\',\'휴원\')">휴원 처리</div>';
+  items+='<div class="bcm-sep"></div>';
+  items+='<div class="bcm-item bcm-gray" onclick="bRemoveStu(\''+colId+'\',\''+name+'\')">배정 해제</div>';
+  const popup=document.createElement('div');popup.className='bcm-popup';
+  popup.innerHTML=items;
+  const rect=el.getBoundingClientRect();
+  popup.style.cssText='position:fixed;top:'+(rect.bottom+4)+'px;left:'+(rect.right-120)+'px;z-index:9999';
+  document.body.appendChild(popup);
+  setTimeout(()=>document.addEventListener('click',closeMenu,{once:true}),0);
+}
+function bSetStatus(name,status){
+  closeMenu();
+  const msg=status?name+' 학생을 휴원 처리할까요?':name+' 학생의 휴원을 해제할까요?';
+  if(!confirm(msg))return;
+  if(status) STU_STATUS[name]=status; else delete STU_STATUS[name];
+  localStorage.setItem('k1_stu_status',JSON.stringify(STU_STATUS));
+  renderDashboard();
+}
+
+let _clickT=null;
+function setSF(f,btn){stuFilter=f;document.querySelectorAll('.sf-btn').forEach(b=>b.classList.toggle('on',b===btn));renderStuList();}
+function bCardClick(name,colId,status,ev){
+  if(ev.target.closest('.bcard-menu-btn'))return;
+  ev.stopPropagation();
+  if(_clickT){
+    clearTimeout(_clickT);_clickT=null;
+    if(status!=='휴원'&&STUDENTS[name]){closeNoteModal();goStudentDetail(name);}
+  }else{
+    _clickT=setTimeout(function(){_clickT=null;showNoteModal(name);},280);
+  }
+}
+
+function renderNoteHistory(name){
+  const RECS=JSON.parse(localStorage.getItem('k1_records')||'{}');
+  const recs=RECS[name]||[];
+  const el=document.getElementById('nm-history-list');
+  if(!recs.length){el.style.display='none';el.innerHTML='';return;}
+  const typeColors={'상담':'#3b82f6','실기 피드백':'#10b981','프로그램 조정':'#f59e0b','기타':'#8b5cf6'};
+  el.style.display='block';
+  el.innerHTML='<div class="nm-history-label">이전 기록 ('+recs.length+'건)</div>'+
+    recs.slice(0,10).map(r=>{
+      const c=typeColors[r.type]||'#8b5cf6';
+      return '<div class="nm-hist-item">'+
+        '<div class="nm-hist-meta">'+
+          '<span class="nm-hist-type" style="background:'+c+'20;color:'+c+'">'+r.type+'</span>'+
+          '<span class="nm-hist-date">'+r.date+'</span>'+
+        '</div>'+
+        '<div class="nm-hist-note">'+r.note.replace(/\n/g,'<br>')+'</div>'+
+      '</div>';
+    }).join('');
+}
+function showNoteModal(name){
+  const teacher=getTeacher(name)||'미입력';
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('nm-av').textContent=name[0]||'?';
+  document.getElementById('nm-av').style.background=TEACHERS[teacher]?TEACHERS[teacher].color:'#6366f1';
+  document.getElementById('nm-name').textContent=name;
+  document.getElementById('nm-sub').textContent=teacher+' 선생님 담당';
+  document.getElementById('nm-stu').value=name;
+  document.getElementById('nm-teacher').value=teacher;
+  document.getElementById('nm-date').value=today;
+  document.getElementById('nm-input').value='';
+  document.getElementById('nm-type').value='기타';
+  document.getElementById('note-modal').style.display='flex';
+  renderNoteHistory(name);
+  setTimeout(()=>document.getElementById('nm-input').focus(),80);
+}
+function closeNoteModal(){
+  document.getElementById('note-modal').style.display='none';
+}
+function saveNoteModal(){
+  const name=document.getElementById('nm-stu').value;
+  const note=document.getElementById('nm-input').value.trim();
+  if(!note){document.getElementById('nm-input').focus();return;}
+  const rec={date:document.getElementById('nm-date').value,teacher:document.getElementById('nm-teacher').value||'미입력',type:document.getElementById('nm-type').value,note};
+  const RECS=JSON.parse(localStorage.getItem('k1_records')||'{}');
+  if(!RECS[name])RECS[name]=[];
+  RECS[name].unshift(rec);
+  localStorage.setItem('k1_records',JSON.stringify(RECS));
+  document.getElementById('nm-input').value='';
+  renderNoteHistory(name);
+  const btn=document.querySelector('#note-modal button[onclick="saveNoteModal()"]');
+  if(btn){const orig=btn.textContent;btn.textContent='저장됨';btn.style.background='#16a34a';setTimeout(function(){btn.textContent=orig;btn.style.background='#3b82f6';},1200);}
+}
+function renderBCol(col,clps){
+  const colCollapsed=clps.c&&clps.c[col.id];
+  const activeN=col.students.filter(function(n){return!STU_STATUS[n];}).length;
+  const leaveN=col.students.filter(function(n){return STU_STATUS[n]==='휴원';}).length;
+  const cntLabel=activeN+(leaveN>0?'+휴'+leaveN:'');
+  let bh='<div class="board-col" id="bcol-'+col.id+'" ondragover="bDragOver(\''+col.id+'\',event)" ondragleave="bDragLeave(\''+col.id+'\')" ondrop="bDrop(\''+col.id+'\',event)">';
+  bh+='<div class="board-col-hdr" onclick="toggleCol(\''+col.id+'\')">';
+  bh+='<div class="board-av" style="background:'+col.color+'">'+col.label[0]+'</div>';
+  bh+='<div class="board-col-name'+(colCollapsed?' bcc':'')+'">'+col.label+(col.type==='teacher'?' T':'')+'</div>';
+  bh+='<div class="board-col-cnt">'+cntLabel+'</div>';
+  if(col.type==='custom') bh+='<button class="board-col-del" onclick="event.stopPropagation();bRemoveCol(\''+col.id+'\')">×</button>';
+  bh+='</div>';
+  bh+='<div class="board-col-body'+(colCollapsed?' hidden':'')+'" id="bbody-'+col.id+'">';
+  col.students.forEach(function(name){
+    const status=STU_STATUS[name]||'';
+    const hasData=!!STUDENTS[name];
+    const sc=hasData?calcScore(name):null;
+    const lv=scoreLvl(sc);
+    const isLeave=status==='휴원';
+    let badge='';
+    if(isLeave) badge='<span class="bcard-badge" style="background:#fee2e2;color:#dc2626">휴원</span>';
+    else if(status==='등원예정') badge='<span class="bcard-badge" style="background:#fef9c3;color:#ca8a04">예정</span>';
+    else if(sc!==null) badge='<span class="bcard-badge" style="background:'+lv.bg+';color:'+lv.c+'">'+sc+'점</span>';
+    const drag=!isLeave?'draggable="true" ondragstart="bDragStart(\''+name+'\',\''+col.id+'\',this)" ondragend="bDragEnd(this)"':'';
+    const ns=isLeave?'color:#94a3b8;text-decoration:line-through':'';
+    bh+='<div class="bcard'+(isLeave?' b-leave':'')+'" style="border-left-color:'+col.color+';cursor:pointer" '+drag+' onclick="bCardClick(\''+name+'\',\''+col.id+'\',\''+status+'\',event)">';
+    bh+='<span class="bcard-name" style="'+ns+'">'+name+'</span>';
+    bh+='<div style="display:flex;align-items:center;gap:3px">'+badge+'<button class="bcard-menu-btn" onclick="bCardMenu(\''+name+'\',\''+col.id+'\',this,event)">⋮</button></div>';
+    bh+='</div>';
+  });
+  bh+='</div>';
+  bh+='<button class="board-add-stu'+(colCollapsed?' hidden':'')+'" id="badd-btn-'+col.id+'" onclick="bAddStu(\''+col.id+'\')">+ 학생 추가</button>';
+  bh+='</div>';
+  return bh;
+}
+function renderDashboard(){
+  const names=Object.keys(STUDENTS);
+  let d=0,w=0,g=0;
+  names.forEach(n=>{const sc=calcStag(n);if(sc.danger>0)d++;else if(sc.warn>0)w++;else if(sc.good>0)g++;});
+  const d2=names.filter(n=>calcStag(n).danger>=3).length;
+  document.getElementById('dash-stats').innerHTML=
+    '<div class="stat-card" style="border-top-color:#3b82f6"><div class="s-lbl">전체 학생</div><div class="s-val" style="color:#3b82f6">'+names.length+'</div><div class="s-sub">측정 데이터 보유</div></div>'+
+    '<div class="stat-card" style="border-top-color:#16a34a"><div class="s-lbl">향상 학생</div><div class="s-val" style="color:#16a34a">'+g+'</div><div class="s-sub">최근 3개월 기준</div></div>'+
+    '<div class="stat-card" style="border-top-color:#ca8a04"><div class="s-lbl">소폭개선·정체</div><div class="s-val" style="color:#ca8a04">'+(w+d)+'</div><div class="s-sub">모니터링 필요</div></div>'+
+    '<div class="stat-card" style="border-top-color:#dc2626"><div class="s-lbl">위험 학생</div><div class="s-val" style="color:#dc2626">'+d2+'</div><div class="s-sub">3개 이상 항목 정체</div></div>';
+  const st=getBSt();
+  const clps=getClps();
+  const usedIds=new Set();
+  let bh='<div class="board-wrap">';
+  Object.entries(TEAMS).forEach(function(entry){
+    const teamName=entry[0];const team=entry[1];
+    const tc=st.cols.filter(function(c){return c.type==='teacher'&&team.teachers.includes(c.label);});
+    const cc=st.cols.filter(function(c){return c.type==='custom'&&c.teamId===teamName;});
+    tc.forEach(function(c){usedIds.add(c.id);});
+    cc.forEach(function(c){usedIds.add(c.id);});
+    const allCols=[].concat(tc,cc);
+    const allStus=allCols.flatMap(function(c){return c.students;});
+    const actN=allStus.filter(function(n){return!STU_STATUS[n];}).length;
+    const lvN=allStus.filter(function(n){return STU_STATUS[n]==='휴원';}).length;
+    const teamColl=clps.t&&clps.t[teamName];
+    bh+='<div class="team-row">';
+    bh+='<div class="team-hdr" onclick="toggleTeam(\''+teamName+'\')"><div class="team-av" style="background:'+team.color+'">T</div>';
+    bh+='<div class="team-name">'+teamName+'</div>';
+    bh+='<div class="team-cnt">'+tc.length+'팀·'+actN+'명'+(lvN>0?' <span style="color:#94a3b8">(휴원 '+lvN+')</span>':'')+(cc.length>0?' <span style="color:'+team.color+'">+'+cc.length+'열</span>':'')+'</div>';
+    bh+='<div class="team-toggle'+(teamColl?' closed':'')+'" id="team-tg-'+teamName+'">▼</div></div>';
+    bh+='<div class="team-body'+(teamColl?' hidden':'')+'" id="team-body-'+teamName+'">';
+    allCols.forEach(function(col){bh+=renderBCol(col,clps);});
+    bh+='<div class="team-col-add"><button class="team-add-col-btn" title="'+teamName+' 안에 열 추가" onclick="bAddCol(\''+teamName+'\')">+</button></div>';
+    bh+='</div></div>';
+  });
+  const customCols=st.cols.filter(function(c){return!usedIds.has(c.id);});
+  if(customCols.length>0){
+    const teamColl=clps.t&&clps.t['_custom'];
+    bh+='<div class="team-row">';
+    bh+='<div class="team-hdr" onclick="toggleTeam(\'_custom\')"><div class="team-av" style="background:#6366f1">+</div>';
+    bh+='<div class="team-name">커스텀 섹션</div><div class="team-cnt">'+customCols.length+'열</div>';
+    bh+='<div class="team-toggle'+(teamColl?' closed':'')+'" id="team-tg-_custom">▼</div></div>';
+    bh+='<div class="team-body'+(teamColl?' hidden':'')+'" id="team-body-_custom">';
+    customCols.forEach(function(col){bh+=renderBCol(col,clps);});
+    bh+='<div class="team-col-add"><button class="team-add-col-btn" onclick="bAddCol(null)">+</button></div>';
+    bh+='</div></div>';
+  }
+  bh+='</div>';
+  document.getElementById('board-container').innerHTML=bh;
+}
+
+function renderStuList(){
+  const q=document.getElementById('stu-search').value;
+  const names=Object.keys(STUDENTS).sort().filter(n=>{
+    if(!n.includes(q))return false;
+    if(stuFilter==='all')return true;
+    const sc=calcStag(n);
+    if(stuFilter==='danger')return sc.danger>0;
+    if(stuFilter==='good')return sc.good>0&&sc.danger===0;
+    return true;
+  });
+  document.getElementById('stu-items').innerHTML=names.map(n=>{
+    const s=STUDENTS[n];const sc=calcStag(n);const cnt=Object.keys(s.rec).length;
+    const score=calcScore(n);const lv=scoreLvl(score);
+    let tag='';
+    if(sc.danger>=2)tag=`<span class="sl-tag" style="background:#fee2e2;color:#dc2626">⚠${sc.danger}</span>`;
+    else if(sc.good>=3)tag=`<span class="sl-tag" style="background:#dcfce7;color:#16a34a">✅${sc.good}</span>`;
+    return`<div class="sl-row${curStu===n?' active':''}" onclick="selStu('${n}')" data-name="${n}">
+      <span class="sl-left">${tag}<span class="sl-name">${n}</span></span>
+      <span class="sl-cnt">${cnt}회</span>
+    </div>`;
+  }).join('');
+  document.getElementById('stu-search').addEventListener('input',()=>renderStuList(),{once:true});
+}
+function selStu(name){
+  curStu=name;
+  document.querySelectorAll('.sl-row').forEach(el=>el.classList.toggle('active',el.dataset.name===name));
+  renderStuDetail(name);
+}
+function destroyCharts(){Object.values(CI).forEach(c=>c&&c.destroy());Object.keys(CI).forEach(k=>delete CI[k]);}
+function renderStuDetail(name){
+  const s=STUDENTS[name];if(!s)return;
+  destroyCharts();
+  const score=calcScore(name);const lv=scoreLvl(score);
+  const sc=calcStag(name);
+  const teacher=getTeacher(name);
+  const tInfo=TEACHERS[teacher]||{color:'#64748b'};
+  const hasMon=MONTHS.filter(m=>s.rec[m]);
+  const welcome=document.getElementById('stu-welcome');
+  const detail=document.getElementById('stu-detail');
+  welcome.style.display='none';detail.style.display='block';
+
+  detail.innerHTML=`
+  <div class="stu-hdr">
+    <div class="stu-av" style="background:${s.g==='F'?'#ec4899':'#3b82f6'}">${name[0]}</div>
+    <div class="stu-info">
+      <h2>${name}</h2>
+      <div class="meta">${s.school} · ${s.g==='F'?'여':'남'} · <span style="color:${tInfo.color};font-weight:700">${teacher} 담당</span></div>
+    </div>
+    <div class="stu-right">
+      <div class="score-badge" style="background:${lv.bg};color:${lv.c}">
+        성취도 ${score!==null?score+'점':'-'}
+        <span style="font-size:11px;font-weight:400">(${lv.label})</span>
+      </div>
+      <div class="m-tags">${hasMon.map(m=>`<span class="m-tag ${CON_MONTHS.includes(m)?'m-con':'m-buz'}">${m}</span>`).join('')}</div>
+    </div>
+  </div>
+  <div class="charts-grid" id="cg"></div>
+  <div class="card-box"><h3>📊 월별 측정 데이터</h3><table id="dtbl"></table></div>
+  <div class="card-box"><h3>🏋️ 트레이닝 프로그램 제안</h3><div id="prog-list"></div></div>`;
+
+  // 차트 생성
+  const cgHtml=METRICS.map(mt=>`<div class="chart-card"><div class="ct">${mt.label} <span class="cbadge" id="b${mt.ci}"></span></div><div class="chart-wrap"><canvas id="c${mt.ci}"></canvas></div></div>`).join('');
+  document.getElementById('cg').innerHTML=cgHtml;
+  const clr=s.g==='F'?'#ec4899':'#3b82f6';
+  METRICS.forEach(mt=>{
+    const ms=mths(mt);const vals=getVals(s.rec,mt.key,ms);
+    const valid=vals.filter(v=>v!==null);
+    const ch=valid.length>=2?{diff:valid[valid.length-1]-valid[0],imp:(mt.hb?1:-1)*(valid[valid.length-1]-valid[0])}:null;
+    const b=document.getElementById('b'+mt.ci);
+    if(ch){const sign=ch.diff>0?'+':'';b.textContent=sign+ch.diff.toFixed(2)+mt.unit;b.className='cbadge '+(ch.imp>mt.thr?'up':ch.imp<-mt.thr?'dn':'fl');}
+    else{b.textContent='-';b.className='cbadge fl';}
+    const lc=!mt.hb?(ch&&ch.imp>mt.thr?'#16a34a':(ch&&ch.imp<-mt.thr?'#dc2626':clr)):clr;
+    CI[mt.key]=new Chart(document.getElementById('c'+mt.ci).getContext('2d'),{type:'line',
+      data:{labels:ms,datasets:[{data:vals,borderColor:lc,backgroundColor:lc+'18',borderWidth:2.5,pointRadius:vals.map(v=>v!==null?4:0),pointBackgroundColor:lc,tension:0.35,fill:true,spanGaps:true}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>{
+          const val=c.parsed.y,idx=c.dataIndex;
+          let prev=null;for(let i=idx-1;i>=0;i--){if(vals[i]!==null){prev=vals[i];break;}}
+          const lines=[`${val} ${mt.unit}`];
+          if(prev!==null){const d=val-prev;const imp=mt.hb?d:-d;lines.push(`전달대비 ${d>0?'+':''}${d.toFixed(2)}${mt.unit} ${imp>0?'▲ 향상':Math.abs(d)<0.001?'→':'▼ 하락'}`);}
+          return lines;
+        }}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{grid:{color:'#f1f5f9'},ticks:{font:{size:9}},reverse:!mt.hb}}}});
+  });
+  // 월별 테이블
+  document.getElementById('dtbl').innerHTML=
+    `<thead><tr><th>월</th>${TBL_COLS.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>`+
+    `<tbody>${MONTHS.filter(m=>s.rec[m]).map(m=>{
+      const r=s.rec[m];const ic=CON_MONTHS.includes(m);
+      return`<tr><td class="mc ${ic?'cc':'bc'}">${m}</td>${TBL_COLS.map(c=>{
+        const v=r[c.key];const cls=(c.key==='s20c'&&ic)?'cc':(c.key==='s20b'&&!ic)?'bc':'';
+        return v==null?`<td class="nv ${cls}">-</td>`:`<td class="${cls}">${v}<small style="color:#94a3b8"> ${c.unit}</small></td>`;
+      }).join('')}</tr>`;
+    }).join('')}</tbody>`;
+  // 프로그램 제안
+  const sug=METRICS.map(mt=>{
+    const vals=getVals(s.rec,mt.key,mths(mt));const valid=vals.filter(v=>v!==null);
+    if(valid.length<2)return null;
+    const recent=valid.slice(-3);const diff=recent[recent.length-1]-recent[0];const imp=mt.hb?diff:-diff;
+    const lv=imp>mt.thr*2?'good':(imp>=-mt.thr?'warn':'danger');
+    const cls=lv==='good'?'pg':(lv==='warn'?'pw':'pd');
+    const p=PROG[mt.key];
+    return`<div class="pi ${cls}"><div class="pi-ic">${p.icon}</div><div class="pi-body"><h4>${p.title}</h4><div class="pi-msg">${p[lv].msg}</div><div class="pi-drill">${p[lv].drill.replace(/\n/g,'<br>')}</div></div></div>`;
+  }).filter(Boolean).sort((a,b)=>a.includes('pd')?-1:b.includes('pd')?1:a.includes('pw')?-1:1);
+  document.getElementById('prog-list').innerHTML=sug.join('')||'<p style="color:#94a3b8;font-size:12px">데이터 부족</p>';
+}
+
+// ── 정체학생 관리 ──
+function setStagFilter(f,btn){
+  stagFilter=f;
+  document.querySelectorAll('.sf2').forEach(b=>b.classList.toggle('on',b===btn));
+  renderStagnation();
+}
+let _stagClps={};
+function toggleStagGroup(tName){
+  _stagClps[tName]=!_stagClps[tName];
+  const body=document.getElementById('sg-'+tName);
+  const tg=document.getElementById('sg-tg-'+tName);
+  if(body){body.classList.toggle('hidden',!!_stagClps[tName]);}
+  if(tg){tg.classList.toggle('closed',!!_stagClps[tName]);}
+}
+function renderStagnation(){
+  const MGMT=JSON.parse(localStorage.getItem('k1_mgmt')||'{}');
+  const names=Object.keys(STUDENTS).sort();
+  let allRows=names.map(n=>{
+    const sc=calcStag(n);const score=calcScore(n);const lv=scoreLvl(score);
+    const causes=getStagCauses(n);
+    const overallLv=sc.danger>0?'danger':(sc.warn>0?'warn':'good');
+    return{name:n,sc,score,lv,causes,overallLv,cnt:Object.keys(STUDENTS[n].rec).length};
+  });
+  let filtered=allRows;
+  if(stagFilter==='danger')filtered=allRows.filter(r=>r.overallLv==='danger');
+  else if(stagFilter==='warn')filtered=allRows.filter(r=>r.overallLv==='warn');
+  else if(stagFilter==='good')filtered=allRows.filter(r=>r.overallLv==='good');
+  filtered.sort((a,b)=>b.sc.score-a.sc.score);
+  document.getElementById('stag-count').textContent=filtered.length+'명';
+  const stBtns=['pending','active','done'];
+  const stLabels=['미조치','관리중','완료'];
+  const stClasses=['st-pending','st-active','st-done'];
+  let html='';
+  Object.entries(TEACHERS).forEach(function(entry){
+    const tName=entry[0];const tInfo=entry[1];
+    const tRows=filtered.filter(r=>getTeacher(r.name)===tName);
+    const isClps=!!_stagClps[tName];
+    html+='<div class="stag-group">';
+    html+='<div class="stag-ghdr" onclick="toggleStagGroup(\''+tName+'\')">'+
+      '<div style="width:28px;height:28px;border-radius:50%;background:'+tInfo.color+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px">'+tName[0]+'</div>'+
+      '<span style="color:'+tInfo.color+';font-weight:700;font-size:13px">'+tName+'</span>'+
+      '<span class="stag-gcnt">'+tRows.length+'명</span>'+
+      '<span class="stag-toggle'+(isClps?' closed':'')+'" id="sg-tg-'+tName+'">▼</span>'+
+    '</div>';
+    html+='<div class="stag-gbody'+(isClps?' hidden':'')+'" id="sg-'+tName+'">';
+    if(tRows.length===0){
+      html+='<div class="stag-empty">해당 학생 없음</div>';
+    }else{
+      html+='<table class="stag-tbl"><thead><tr><th>학생</th><th>학교</th><th>측정</th><th>정체 원인</th><th>추천 조치</th><th>관리 상태</th><th></th></tr></thead><tbody>';
+      tRows.forEach(function(r){
+        const s=STUDENTS[r.name];
+        const status=MGMT[r.name]||'pending';
+        const causes=getStagCauses(r.name);
+        const causeHtml=causes.length?causes.map(c=>'<span class="cause-tag'+(c.lv==='warn'?' warn':'')+'">' +c.cat+'</span>').join(''):'<span style="font-size:11px;color:#16a34a">이상없음</span>';
+        const recAction=causes.length?PROG[METRICS.find(m=>m.cat===causes[0].cat&&causes[0].lv==='danger')?.key||METRICS.find(m=>m.cat===causes[0].cat)?.key]?.[causes[0].lv==='danger'?'danger':'warn']?.msg||'프로그램 확인 필요':'유지';
+        html+='<tr>'+
+          '<td><strong>'+r.name+'</strong></td>'+
+          '<td style="font-size:11px;color:#64748b">'+s.school+'</td>'+
+          '<td style="text-align:center;font-size:11px">'+r.cnt+'회</td>'+
+          '<td>'+causeHtml+'</td>'+
+          '<td style="font-size:11px;color:#374151;max-width:160px">'+recAction+'</td>'+
+          '<td><div style="display:flex;gap:3px">'+
+          stBtns.map(function(v,i){return'<button class="st-btn '+(v===status?stClasses[i]:'st-pending')+'" onclick="setMgmt(\''+r.name+'\',\''+v+'\',this)">'+stLabels[i]+'</button>';}).join('')+
+          '</div></td>'+
+          '<td><button class="go-btn" onclick="goStudentDetail(\''+r.name+'\')">→</button></td>'+
+        '</tr>';
+      });
+      html+='</tbody></table>';
+    }
+    html+='</div></div>';
+  });
+  document.getElementById('stag-container').innerHTML=html;
+}
+function setMgmt(name,status,btn){
+  const MGMT=JSON.parse(localStorage.getItem('k1_mgmt')||'{}');
+  MGMT[name]=status;localStorage.setItem('k1_mgmt',JSON.stringify(MGMT));
+  const stClasses=['st-pending','st-active','st-done'];
+  const stBtns=['pending','active','done'];
+  btn.closest('div').querySelectorAll('button').forEach((b,i)=>{
+    b.className='st-btn '+(stBtns[i]===status?stClasses[i]:'st-pending');
+  });
+}
+
+// ── 상담/조치 기록 ──
+function renderRecords(){
+  const q=document.getElementById('rec-stu-search').value||'';
+  const RECS=JSON.parse(localStorage.getItem('k1_records')||'{}');
+  const names=Object.keys(STUDENTS).filter(n=>n.includes(q));
+  names.sort((a,b)=>{
+    const aRecs=RECS[a]||[];const bRecs=RECS[b]||[];
+    if(!aRecs.length&&!bRecs.length)return a.localeCompare(b,'ko');
+    if(!aRecs.length)return 1;
+    if(!bRecs.length)return -1;
+    const aDate=(aRecs[0].editedAt||aRecs[0].date||'');
+    const bDate=(bRecs[0].editedAt||bRecs[0].date||'');
+    return bDate.localeCompare(aDate);
+  });
+  document.getElementById('rec-stu-list').innerHTML=names.map(n=>{
+    const cnt=(RECS[n]||[]).length;
+    const lastDate=cnt>0?(RECS[n][0].editedAt||RECS[n][0].date||''):'';
+    return `<div class="rec-stu-row${recStu===n?' active':''}" onclick="selRecStu('${n}')">`+
+      n+(cnt>0?`<span class="rec-badge">${cnt}건</span>`:'') +
+      (lastDate?`<div style="font-size:9px;color:#94a3b8;margin-top:1px">${lastDate}</div>`:'') +
+    '</div>';
+  }).join('');
+  document.getElementById('rec-stu-search').addEventListener('input',()=>renderRecords(),{once:true});
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('rec-date').value=today;
+}
+function selRecStu(name){
+  recStu=name;
+  document.querySelectorAll('.rec-stu-row').forEach(el=>el.classList.toggle('active',el.dataset.name===name));
+  document.getElementById('rec-no-stu').style.display='none';
+  document.getElementById('rec-form').style.display='block';
+  const teacher=getTeacher(name);
+  if(teacher!=='미배정')document.getElementById('rec-teacher').value=teacher;
+  renderHistory(name);
+}
+function renderHistory(name){
+  const RECS=JSON.parse(localStorage.getItem('k1_records')||'{}');
+  const recs=RECS[name]||[];
+  const typeColors={'상담':'#3b82f6','실기 피드백':'#10b981','프로그램 조정':'#f59e0b','기타':'#8b5cf6'};
+  const tFull={'도현':'이도현','현수':'정현수','지은':'정지은','다빈':'전다빈','주혁':'박주혁','유선':'이유선','경준':'이경준','준기':'홍준기','소윤':'이소윤','병찬':'강병찬'};
+  document.getElementById('rec-history-list').innerHTML=recs.length?recs.map((r,i)=>{
+    const c=typeColors[r.type]||'#8b5cf6';
+    const tLabel=tFull[r.teacher]||r.teacher||'미입력';
+    return '<div class="rec-entry type-'+(r.type.split(' ')[0])+'" id="re-'+i+'">'+
+      '<div class="re-top">'+
+        '<span class="re-type" style="background:'+c+'20;color:'+c+'">'+r.type+'</span>'+
+        '<span class="re-date">'+r.date+'</span>'+
+        '<span class="re-teacher" style="font-weight:600">· '+tLabel+'</span>'+
+      '</div>'+
+      '<div class="re-note">'+r.note.replace(/\n/g,'<br>')+'</div>'+
+      (r.editedAt?'<div class="re-edited">수정: '+r.editedAt+' · '+(tFull[r.editedBy]||r.editedBy||'')+'</div>':'')+
+      
+      '<div class="re-actions">'+
+        '<button class="re-btn edit" onclick="editRecord(\''+name+'\','+i+')">편집</button>'+
+        '<button class="re-btn del" onclick="delRecord(\''+name+'\','+i+')">삭제</button>'+
+      '</div>'+
+    '</div>';
+  }).join(''):'<div class="rec-empty">아직 기록이 없습니다</div>';
+}
+function delRecord(name,idx){
+  if(!confirm('이 기록을 삭제할까요?'))return;
+  const RECS=JSON.parse(localStorage.getItem('k1_records')||'{}');
+  if(RECS[name]){RECS[name].splice(idx,1);localStorage.setItem('k1_records',JSON.stringify(RECS));}
+  renderHistory(name);renderRecords();
+}
+function editRecord(name,idx){
+  const RECS=JSON.parse(localStorage.getItem('k1_records')||'{}');
+  const r=(RECS[name]||[])[idx];if(!r)return;
+  document.getElementById('rec-date').value=r.date;
+  document.getElementById('rec-teacher').value=r.teacher||'';
+  document.getElementById('rec-type').value=r.type;
+  document.getElementById('rec-note').value=r.note;
+  const form=document.getElementById('rec-form');
+  form.dataset.editIdx=String(idx);
+  form.style.display='block';
+  document.querySelectorAll('.rec-entry').forEach(e=>e.classList.remove('editing'));
+  const entry=document.getElementById('re-'+idx);
+  if(entry){entry.classList.add('editing');entry.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  document.querySelector('#rec-form .save-btn').textContent='수정 완료';
+  document.getElementById('rec-note').focus();
+}
+function saveRecord(){
+  if(!recStu)return;
+  const rec={date:document.getElementById('rec-date').value,teacher:document.getElementById('rec-teacher').value||'미입력',type:document.getElementById('rec-type').value,note:document.getElementById('rec-note').value};
+  if(!rec.note.trim()){alert('내용을 입력해주세요');return;}
+  const RECS=JSON.parse(localStorage.getItem('k1_records')||'{}');
+  if(!RECS[recStu])RECS[recStu]=[];
+  const form=document.getElementById('rec-form');
+  const editIdx=form.dataset.editIdx;
+  if(editIdx!==undefined&&editIdx!==''){
+    rec.editedAt=new Date().toISOString().slice(0,10);rec.editedBy=rec.teacher;
+    RECS[recStu][parseInt(editIdx)]=rec;
+    delete form.dataset.editIdx;
+    document.querySelector('#rec-form .save-btn').textContent='저장';
+    document.querySelectorAll('.rec-entry').forEach(e=>e.classList.remove('editing'));
+  }else{
+    RECS[recStu].unshift(rec);
+  }
+  localStorage.setItem('k1_records',JSON.stringify(RECS));
+  document.getElementById('rec-note').value='';
+  renderHistory(recStu);
+  renderRecords();
+}
+// ── 초기화 ──
+document.getElementById('stu-search').addEventListener('input',()=>renderStuList());
+document.getElementById('rec-stu-search').addEventListener('input',()=>renderRecords());
+(function waitFB(){
+  if(!_fbReady){setTimeout(waitFB,80);return;}
+  try{const s=JSON.parse(_lsGet('k1_stu_status')||'null');if(s)STU_STATUS=s;}catch(e){}
+  _bst=null;
+  const el=document.getElementById('fb-loading');if(el)el.remove();
+  renderDashboard();renderStuList();
+  FB_KEYS.forEach(k=>{
+    fbDB.ref('data/'+k).on('value',snap=>{
+      if(!_fbReady)return;
+      const v=snap.val();if(v===null)return;
+      if(_lsGet(k)===v)return;
+      _lsSet(k,v);
+      if(k==='k1_stu_status'){try{STU_STATUS=JSON.parse(v);}catch(e){}}
+      if(k==='k1_board')_bst=null;
+      renderDashboard();
+      if(curPage==='students')renderStuList();
+      if(curPage==='stagnation')renderStagnation();
+      if(curPage==='records'){renderRecords();if(recStu)renderHistory(recStu);}
+    });
+  });
+})();
+</script>
+<div id="note-modal" class="nm-overlay" style="display:none" onclick="closeNoteModal()">
+  <div class="nm-box" onclick="event.stopPropagation()">
+    <div class="nm-hdr">
+      <div class="nm-av" id="nm-av" style="background:#3b82f6">?</div>
+      <div><div style="font-weight:800;font-size:15px;color:#1e293b" id="nm-name">-</div>
+      <div style="font-size:11px;color:#94a3b8" id="nm-sub">-</div></div>
+    </div>
+    <input type="hidden" id="nm-stu">
+    <textarea class="nm-ta" id="nm-input" rows="3" placeholder="이슈나 메모를 입력 후 저장 (Ctrl+Enter)..." onkeydown="if(event.ctrlKey&&event.key==='Enter')saveNoteModal()"></textarea>
+    <div class="nm-row">
+      <input type="date" id="nm-date" class="nm-sel">
+      <select id="nm-type" class="nm-sel">
+        <option value="기타">기타</option>
+        <option value="상담">상담</option>
+        <option value="실기 피드백">실기 피드백</option>
+        <option value="프로그램 조정">프로그램 조정</option>
+      </select>
+    </div>
+    <select id="nm-teacher" class="nm-sel"><option value="">선택</option><option value="도현">이도현</option><option value="현수">정현수</option><option value="지은">정지은</option><option value="다빈">전다빈</option><option value="주혁">박주혁</option><option value="유선">이유선</option><option value="경준">이경준</option><option value="준기">홍준기</option><option value="소윤">이소윤</option><option value="병찬">강병찬</option></select>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button onclick="closeNoteModal()" style="padding:7px 16px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:#64748b">취소</button>
+      <button onclick="saveNoteModal()" style="padding:7px 16px;border:none;border-radius:8px;background:#3b82f6;cursor:pointer;font-size:12px;color:#fff;font-weight:700">저장</button>
+    </div>
+    <div class="nm-history" id="nm-history-list"></div>
+  </div></div>
+</body></html>
