@@ -236,7 +236,33 @@ textarea{resize:vertical;min-height:70px}
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <link rel="manifest" href="/k1-tracker/manifest.json"></head>
-<body>
+<body><div id="pw-gate" style="position:fixed;inset:0;z-index:999999;background:#f8fafc;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:36px;box-shadow:0 4px 24px rgba(0,0,0,0.10);width:320px;text-align:center">
+    <div style="width:48px;height:48px;background:#3b82f6;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;margin:0 auto 16px">K1</div>
+    <div style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:6px">K1 트래커</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:20px">비밀번호를 입력하세요</div>
+    <input id="pw-input" type="password" placeholder="비밀번호" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none;margin-bottom:10px" onkeydown="if(event.key==='Enter')checkPW()">
+    <div id="pw-err" style="font-size:12px;color:#ef4444;margin-bottom:8px;display:none">비밀번호가 틀렸습니다</div>
+    <button onclick="checkPW()" style="width:100%;padding:11px;background:#3b82f6;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">입장</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('k1_auth')==='ok'){
+    document.getElementById('pw-gate').style.display='none';
+  }
+})();
+function checkPW(){
+  var v=document.getElementById('pw-input').value;
+  if(v==='zpdldnjs123!'){
+    localStorage.setItem('k1_auth','ok');
+    document.getElementById('pw-gate').style.display='none';
+  } else {
+    document.getElementById('pw-err').style.display='block';
+    document.getElementById('pw-input').value='';
+  }
+}
+</script>
 <div id="fb-loading" style="position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px">
   <div style="width:42px;height:42px;background:#3b82f6;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff">K1</div>
   <div style="font-size:13px;color:#64748b;font-weight:500">데이터 불러오는 중...</div>
